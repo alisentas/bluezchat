@@ -22,119 +22,106 @@ import java.util.ArrayList;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private BluetoothAdapter btAdapter;
+    private SingBroadcastReceiver Receiver;
+    ProgressBar progressBar;
+    int REQUEST_ENABLE_BT = 526;
+    String btAygitlar = "";
+    public int cikis = 0;
+    private OutputStream outputStream;
+    private InputStream inStream;
+    ArrayList<BluetoothDevice> devices2 = new ArrayList<BluetoothDevice>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
 
+        //register local BT adapter
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        //check to see if there is BT on the Android device at all
+        if (btAdapter == null) {
+            int duration = Toast.LENGTH_SHORT;
+            Toast.makeText(this, "No Bluetooth on this handset", duration).show();
+        }
+        //let's make the user enable BT if it isn't already
+        if (!btAdapter.isEnabled()) {
+            Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBT, REQUEST_ENABLE_BT);
+        }
+;
+        //cancel any prior BT device discovery
+        if (btAdapter.isDiscovering()) {
+            btAdapter.cancelDiscovery();
+        }
+        //re-start discovery
 
-    public void run() {private BluetoothAdapter btAdapter;
-        private SingBroadcastReceiver Receiver;
-        ProgressBar progressBar;
-        int REQUEST_ENABLE_BT = 526;
-        String btAygitlar="";
-        public int cikis=0;
-        private OutputStream outputStream;
-        private InputStream inStream;
-        ArrayList<BluetoothDevice> devices2=new ArrayList<BluetoothDevice>();
+        Log.i("Discovery", "Starting discovery");
+        btAdapter.startDiscovery();
 
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
-            progressBar=(ProgressBar) findViewById(R.id.progressBar);
+        //let's make a broadcast receiver to register our things
+        Receiver = new SingBroadcastReceiver();
+        IntentFilter ifilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        this.registerReceiver(Receiver, ifilter);
+    }
 
 
-            //register local BT adapter
-            btAdapter = BluetoothAdapter.getDefaultAdapter();
-            //check to see if there is BT on the Android device at all
-            if (btAdapter == null) {
-                int duration = Toast.LENGTH_SHORT;
-                Toast.makeText(this, "No Bluetooth on this handset", duration).show();
+    private class SingBroadcastReceiver extends BroadcastReceiver {
+        public void onReceive(Context context, Intent intent) {
+            progressBar.setVisibility(View.VISIBLE);
+            String action = intent.getAction(); //may need to chain this to a recognizing function
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a Toast
+                btAygitlar = device.getName() + "    " + device.getAddress();
+                devices2.add(device);
+                /*try {
+                    init();
+                    write("denemeee");
+
+                    run();
+                    Toast.makeText(getApplicationContext(), devices2.get(2).getName() + "  gonderildi", Toast.LENGTH_LONG).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }*/
             }
-            //let's make the user enable BT if it isn't already
-            if (!btAdapter.isEnabled()) {
-                Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBT, REQUEST_ENABLE_BT);
-            }
-
-
-
-            //cancel any prior BT device discovery
-            if (btAdapter.isDiscovering()) {
-                btAdapter.cancelDiscovery();
-            }
-            //re-start discovery
-
-            btAdapter.startDiscovery();
-
-            //let's make a broadcast receiver to register our things
-            Receiver = new SingBroadcastReceiver();
-            IntentFilter ifilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-            this.registerReceiver(Receiver, ifilter);
-
-
-
-
-
+            Toast.makeText(context, btAygitlar, Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
 
         }
+    }
 
+    /*public void write(String s) throws IOException {
+        outputStream.write(s.getBytes());
+    }*/
 
-        private class SingBroadcastReceiver extends BroadcastReceiver
-        {
-            public void onReceive(Context context, Intent intent)
-            {
-                progressBar.setVisibility(View.VISIBLE);
-                String action = intent.getAction(); //may need to chain this to a recognizing function
-                if (BluetoothDevice.ACTION_FOUND.equals(action))
-                {
-                    // Get the BluetoothDevice object from the Intent
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    // Add the name and address to an array adapter to show in a Toast
-                    btAygitlar = device.getName() + "    " + device.getAddress();
-                    devices2.add(device);
-                    try {
-                        init();
-                        write("denemeee");
+    /*private void init() throws IOException {
+        BluetoothAdapter blueAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (blueAdapter != null) {
+            if (blueAdapter.isEnabled()) {
+                Set<BluetoothDevice> bondedDevices = blueAdapter.getBondedDevices();
 
-                        run();
-                        Toast.makeText(getApplicationContext(), devices2.get(2).getName()+"  gonderildi", Toast.LENGTH_LONG).show();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                if (bondedDevices.size() > 0) {
+                    Object[] devices = (Object[]) bondedDevices.toArray();
+                    BluetoothDevice device = (BluetoothDevice) devices2.get(0);
+                    ParcelUuid[] uuids = device.getUuids();
+                    BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
+                    socket.connect();
+                    outputStream = socket.getOutputStream();
+                    inStream = socket.getInputStream();
                 }
-                Toast.makeText(context, btAygitlar, Toast.LENGTH_LONG).show();
-                progressBar.setVisibility(View.GONE);
 
+                Log.e("error", "No appropriate paired devices.");
+            } else {
+                Log.e("error", "Bluetooth is disabled.");
             }
         }
+    }*/
 
-        public void write(String s) throws IOException {
-            outputStream.write(s.getBytes());
-        }
-
-        private void init() throws IOException {
-            BluetoothAdapter blueAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (blueAdapter != null) {
-                if (blueAdapter.isEnabled()) {
-                    Set<BluetoothDevice> bondedDevices = blueAdapter.getBondedDevices();
-
-                    if(bondedDevices.size() > 0) {
-                        Object[] devices = (Object []) bondedDevices.toArray();
-                        BluetoothDevice device = (BluetoothDevice) devices2.get(0);
-                        ParcelUuid[] uuids = device.getUuids();
-                        BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
-                        socket.connect();
-                        outputStream = socket.getOutputStream();
-                        inStream = socket.getInputStream();
-                    }
-
-                    Log.e("error", "No appropriate paired devices.");
-                } else {
-                    Log.e("error", "Bluetooth is disabled.");
-                }
-            }
-        }
-
-
+    /*public void run() {
         final int BUFFER_SIZE = 1024;
         byte[] buffer = new byte[BUFFER_SIZE];
         int bytes = 0;
@@ -147,6 +134,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }*/
 
-
-    }}
+}
