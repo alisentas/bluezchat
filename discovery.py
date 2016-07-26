@@ -34,4 +34,4 @@ while True:
 
 	peers.close()
 	print "Sleeping..."
-	time.sleep(5)
+	time.sleep(20)

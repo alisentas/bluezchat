@@ -1,4 +1,5 @@
 import bluetooth
+import sys, os
 
 def send_packet(bdaddr, port, message):
 	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
@@ -34,7 +35,12 @@ def listen_packets(port, answer = False):
 
 		if answer:
 			return send_packet(address[0], 3, "Silence by brother")
-	except:
+	except KeyboardInterrupt:
+		try:
+			sys.exit(0)
+		except SystemExit:
+			os._exit(0)
+	finally:
 		client_sock.close()
 		server_sock.close()
 		print "Something happened while listening, probably timeout"
