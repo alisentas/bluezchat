@@ -10,14 +10,14 @@ while True:
 	peersArray = []
 	index = -1
 
-	nearby_devices = bluetooth.discover_devices()
+	nearby_devices = bluetooth.discover_devices(3, True, True)
 
-	for bdaddr in nearby_devices:
-		index += 1
-		print bdaddr, bluetooth.lookup_name( bdaddr )
-		peersArray.append([bdaddr, str(bluetooth.lookup_name( bdaddr )), 0])
-		print "Check: " + bdaddr
-		send_packet(bdaddr, 2, "What is the music of life?")
+	print nearby_devices
+
+	for device in nearby_devices:
+		peersArray.append([device[0], str(device[1]), 0])
+		print "Check: " + device[0] + " - " + device[1]
+		send_packet(device[0], 2, "What is the music of life?")
 		isopen = listen_packets(3)
 		if isopen:
 			peersArray[index][2] = 1
