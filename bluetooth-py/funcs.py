@@ -20,7 +20,7 @@ def listen_packets(port, answer = False):
 	print "received [%s]" % data
 
 	if answer:
-		send_packet(address, 3, "Silence by brother")
+		send_packet(address[0], 3, "Silence by brother")
 		return True
 
 	client_sock.close()

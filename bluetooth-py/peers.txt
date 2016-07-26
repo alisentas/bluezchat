@@ -1,4 +1,0 @@
-22:22:0F:DC:FF:76, LG Phone
-6C:71:D9:5B:CB:58, UYSAL
-FC:F8:AE:00:B9:F4, None
-38:59:F9:F5:48:EB, parrot
