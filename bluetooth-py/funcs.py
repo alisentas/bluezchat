@@ -6,6 +6,7 @@ def send_packet(bdaddr, port, message):
 
 	sock.send(message)
 
+	print "Sent[%s]" % message
 	sock.close()
 
 def listen_packets(port, answer = False):
