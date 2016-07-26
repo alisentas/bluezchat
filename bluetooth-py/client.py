@@ -1,12 +1,9 @@
 import bluetooth
 
-bd_addr = "38:59:F9:F5:48:EB"
+def function send_packet(bdaddr, port, message):
+	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+	sock.connect((bdaddr, port))
 
-port = 1
+	sock.send(message)
 
-sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-sock.connect((bd_addr, port))
-
-sock.send("hello ali lai ali lali ali!!")
-
-sock.close()
+	sock.close()
