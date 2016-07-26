@@ -10,9 +10,10 @@ def send_packet(bdaddr, port, message):
 	except:
 		print "Something happened while connecting"
 		sock.close()
-		return
+		return False
 	
 	print "Sent[%s]" % message
+	return True
 	sock.close()
 
 def listen_packets(port, answer = False):
@@ -32,12 +33,13 @@ def listen_packets(port, answer = False):
 		print "received [%s]" % data
 
 		if answer:
-			send_packet(address[0], 3, "Silence by brother")
-			return True
+			return send_packet(address[0], 3, "Silence by brother")
 	except:
 		client_sock.close()
 		server_sock.close()
 		print "Something happened while listening, probably timeout"
+		return False
 
 	client_sock.close()
 	server_sock.close()
+	return True
