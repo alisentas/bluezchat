@@ -6,13 +6,18 @@ while True:
 	target_name = None
 	target_address = None
 
-	peers = open("peers.txt", "w")
+	peersArray = []
 
 	nearby_devices = bluetooth.discover_devices()
 
 	for bdaddr in nearby_devices:
 	    print bdaddr, bluetooth.lookup_name( bdaddr )
-	    peers.write(bdaddr + "," + bluetooth.lookup_name( bdaddr ) + "\n")
+	    peersArray.append([bdaddr, str(bluetooth.lookup_name( bdaddr ))])
+	   
+	peers = open("peers.txt", "w")
+
+	for peer in peersArray:
+		peers.write(peer[0] + ", " + peer[1] + "\n")
 
 	peers.close()
 	print "Sleeping..."
