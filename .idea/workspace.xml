@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9db8b0a8-6c50-4bb4-bcc2-59f4ebbbc832" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/discovery.py" afterPath="$PROJECT_DIR$/discovery.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/funcs.py" afterPath="$PROJECT_DIR$/funcs.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/listen_discoveries.py" afterPath="$PROJECT_DIR$/listen_discoveries.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/send_discovery.py" afterPath="$PROJECT_DIR$/send_discovery.py" />
     </list>
     <ignored path="AirTies-Proje.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,7 +50,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="listen_discoveries.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="listen_discoveries.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/listen_discoveries.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="72">
@@ -78,11 +74,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="funcs.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="funcs.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/funcs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="25" column="38" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
+            <state relative-caret-position="432">
+              <caret line="36" column="56" selection-start-line="36" selection-start-column="56" selection-end-line="36" selection-end-column="56" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -121,9 +117,9 @@
         <option value="$PROJECT_DIR$/send.py" />
         <option value="$PROJECT_DIR$/listen_messages.py" />
         <option value="$PROJECT_DIR$/discovery.py" />
-        <option value="$PROJECT_DIR$/funcs.py" />
         <option value="$PROJECT_DIR$/listen_discoveries.py" />
         <option value="$PROJECT_DIR$/send_discovery.py" />
+        <option value="$PROJECT_DIR$/funcs.py" />
       </list>
     </option>
   </component>
@@ -657,16 +653,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/funcs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="25" column="38" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/send.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="108">
@@ -701,6 +687,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="72">
           <caret line="4" column="31" selection-start-line="4" selection-start-column="31" selection-end-line="4" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/funcs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="432">
+          <caret line="36" column="56" selection-start-line="36" selection-start-column="56" selection-end-line="36" selection-end-column="56" />
           <folding>
             <element signature="e#0#16#0" expanded="true" />
           </folding>

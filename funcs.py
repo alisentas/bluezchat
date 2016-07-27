@@ -34,7 +34,7 @@ def listen_packets(port, timeout, answer = False, transmit = False):
 		print "received [%s]" % data
 
 		if answer:
-			return send_packet(address[0], 3, "Silence by brother")
+			return send_packet(address[0], 3, "Silence my brother")
 		if transmit:
 			return False
 
