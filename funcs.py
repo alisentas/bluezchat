@@ -8,8 +8,11 @@ def send_packet(bdaddr, port, message):
 		sock.settimeout(5)
 		sock.connect((bdaddr, port))
 		sock.send(message)
-	except:
+	except Exception as exception:
 		print "Something happened while connecting", bdaddr
+		template = "An exception of type {0} occured. Arguments:{1!r}"
+		mesg = template.format(type(exception).__name__, exception.args)
+		print mesg
 		sock.close()
 		return False
 	
@@ -23,6 +26,7 @@ def listen_packets(port, timeout, answer = False, transmit = False):
 	
 	try:
 		server_sock.bind(("",port))
+		server_sock.setsockopt(1,2,1);
 		if timeout > 0:
 			server_sock.settimeout(timeout)
 		server_sock.listen(1)
