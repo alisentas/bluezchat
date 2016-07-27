@@ -5,13 +5,13 @@ def send_packet(bdaddr, port, message):
 	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 	try:
-		sock.settimeout(5)
+		sock.settimeout(15)
 		sock.connect((bdaddr, port))
 		sock.send(message)
 	except Exception as exception:
 		template = "An exception of type {0} occured. Arguments:{1!r}"
 		mesg = template.format(type(exception).__name__, exception.args)
-		print mesg
+		print mesg, bdaddr
 		sock.close()
 		return False
 	
