@@ -1,6 +1,8 @@
 import bluetooth
 import time
 from funcs import *
+from subprocess import call
+from os import system
 
 while True:
 	print "Discovery started."
@@ -10,21 +12,15 @@ while True:
 	peersArray = []
 	index = -1
 
-	nearby_devices = bluetooth.discover_devices(8, False, True)
+	nearby_devices = bluetooth.discover_devices(8, True, True)
 
 	print nearby_devices
 
 	for device in nearby_devices:
 		peersArray.append([device[0], str(device[1]), 0])
 		print "Check: " + device[0] + " - " + device[1]
-		res = send_packet(device[0], 2, "What is the music of life?")
-		print "Res:[%s]" % res
-		if res:
-			isopen = listen_packets(3)
-			if isopen:
-				peersArray[index][2] = 1
-		else:
-			print "Couldn't connect"
+		#call(["python send_discovery.py", device[0]])
+		system("python send_discovery.py %s \"%s\" &" % (device[0], device[1]))
 	   
 	peers = open("peers.txt", "w")
 

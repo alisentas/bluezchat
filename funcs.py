@@ -9,11 +9,11 @@ def send_packet(bdaddr, port, message):
 		sock.settimeout(3)
 		sock.send(message)
 	except:
-		print "Something happened while connecting"
+		print "Something happened while connecting", bdaddr
 		sock.close()
 		return False
 	
-	print "Sent[%s]" % message
+	print "Sent[%s] to %s" % (message, bdaddr)
 	sock.close()
 	return True
 
@@ -53,6 +53,5 @@ def listen_packets(port, answer = False):
 def sendall(port, message):
 	closests = [line.rstrip('\n') for line in open("closest.txt", "r")]
 	peers = [peer.split(",") for peer in closests]
-	print peers
-
-sendall(2, "asdasd")
+	for peer in peers:
+		send_packet(peer[0], 2, message)
