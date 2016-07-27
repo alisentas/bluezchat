@@ -1,8 +1,5 @@
-import bluetooth
 import time
 from funcs import *
-import sqlite
-from os import system
 import subprocess
 
 while True:

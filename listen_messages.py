@@ -1,4 +1,3 @@
-import bluetooth
 from funcs import *
 
 while True:

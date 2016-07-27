@@ -1,6 +1,5 @@
 from funcs import send_packet, listen_packets
 import sys
-import sqlite
 
 bdaddr  = sys.argv[1]
 lookup_name = sys.argv[2]

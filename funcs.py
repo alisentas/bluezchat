@@ -5,8 +5,8 @@ def send_packet(bdaddr, port, message):
 	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 	try:
+		sock.settimeout(5)
 		sock.connect((bdaddr, port))
-		sock.settimeout(3)
 		sock.send(message)
 	except:
 		print "Something happened while connecting", bdaddr
@@ -23,7 +23,8 @@ def listen_packets(port, timeout, answer = False, transmit = False):
 	
 	try:
 		server_sock.bind(("",port))
-		server_sock.settimeout(timeout)
+		if timeout > 0:
+			server_sock.settimeout(timeout)
 		server_sock.listen(1)
 
 
