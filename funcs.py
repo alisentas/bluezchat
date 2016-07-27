@@ -17,13 +17,13 @@ def send_packet(bdaddr, port, message):
 	sock.close()
 	return True
 
-def listen_packets(port, answer = False):
+def listen_packets(port, timeout, answer = False, transmit = False):
 	server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 	client_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 	
 	try:
 		server_sock.bind(("",port))
-		server_sock.settimeout(3)
+		server_sock.settimeout(timeout)
 		server_sock.listen(1)
 
 
@@ -35,6 +35,9 @@ def listen_packets(port, answer = False):
 
 		if answer:
 			return send_packet(address[0], 3, "Silence by brother")
+		if transmit:
+			return False
+
 	except KeyboardInterrupt:
 		try:
 			sys.exit(0)
