@@ -5,7 +5,7 @@ def send_packet(bdaddr, port, message):
 	sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 	try:
-		sock.settimeout(15)
+		sock.settimeout(5)
 		sock.connect((bdaddr, port))
 		sock.send(message)
 	except Exception as exception:
