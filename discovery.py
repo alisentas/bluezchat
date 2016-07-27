@@ -30,7 +30,7 @@ while True:
 
 	for peer in peersArray:
 		if peer[2]:
-			peers.write(peer[0] + ", " + peer[1] + "\n")
+			peers.write(peer[0] + "," + peer[1] + "\n")
 
 	peers.close()
 	print "Sleeping..."

@@ -14,8 +14,8 @@ def send_packet(bdaddr, port, message):
 		return False
 	
 	print "Sent[%s]" % message
-	return True
 	sock.close()
+	return True
 
 def listen_packets(port, answer = False):
 	server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
@@ -49,3 +49,10 @@ def listen_packets(port, answer = False):
 	client_sock.close()
 	server_sock.close()
 	return True
+
+def sendall(port, message):
+	closests = [line.rstrip('\n') for line in open("closest.txt", "r")]
+	peers = [peer.split(",") for peer in closests]
+	print peers
+
+sendall(2, "asdasd")
