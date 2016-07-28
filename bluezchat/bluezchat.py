@@ -74,8 +74,14 @@ class BluezChatGui:
 
         # the listening sockets
         self.server_sock = None
+        self.name = "ali-pc"
 
 # --- gui signal handlers
+    
+    def get_name(self, addr):
+        for device in self.discovered:
+            if(device[0] == addr):
+                return device[1]
 
     def quit_button_clicked(self, widget):
         gtk.main_quit()
@@ -94,7 +100,7 @@ class BluezChatGui:
 #        self.chat_button.set_sensitive(True)
 
     def send_button_clicked(self, widget):
-        text = self.input_tb.get_text()
+        text =  str(int(time.time()) % 1000) + "," + self.name + self.input_tb.get_text()
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
@@ -148,12 +154,16 @@ class BluezChatGui:
             del self.addresses[sock]
             sock.close()
         else:
-            self.add_text("\n%s - %s" % (address, str(data)))
-            if str(data) not in self.messages:
-                self.messages.append(str(data))
+            s_data = str(data)
+            s_data_arr = s_data.split(",")
+            name = s_data_arr[1]
+            message = s_data_arr[2]
+            self.add_text("\n%s - %s" % (name, message))
+            if s_data not in self.messages:
+                self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
                     if addr != address:
-                        sock.send(str(data))
+                        sock.send(s_data)
         return True
 
 # --- other stuff
