@@ -100,7 +100,7 @@ class BluezChatGui:
 #        self.chat_button.set_sensitive(True)
 
     def send_button_clicked(self, widget):
-        text =  str(int(time.time()) % 1000) + "," + self.name + self.input_tb.get_text()
+        text =  str(int(time.time()) % 1000) + "," + self.name + "," + self.input_tb.get_text()
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
