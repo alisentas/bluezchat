@@ -107,7 +107,9 @@ class BluezChatGui:
             sock.send(text)
 
         self.input_tb.set_text("")
-        self.add_text("\nme - %s" % text)
+        s_data_arr = text.split(",")
+        message = s_data_arr[2]
+        self.add_text("\n%s: %s" % (self.name, message))
 
     def chat_button_clicked(self, widget):
         (model, iter) = self.devices_tv.get_selection().get_selected()
@@ -158,7 +160,7 @@ class BluezChatGui:
             s_data_arr = s_data.split(",")
             name = s_data_arr[1]
             message = s_data_arr[2]
-            self.add_text("\n%s - %s" % (name, message))
+            self.add_text("\n%s: %s" % (name, message))
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
