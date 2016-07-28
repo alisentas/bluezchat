@@ -5,8 +5,8 @@
   <widget class="GtkWindow" id="bluezchat_window">
     <property name="visible">True</property>
     <property name="title" translatable="yes">bluez chat</property>
-    <property name="default_width">240</property>
-    <property name="default_height">320</property>
+    <property name="default_width">500</property>
+    <property name="default_height">600</property>
     <signal name="delete_event" handler="gtk_main_quit"/>
     <signal name="destroy_event" handler="gtk_main_quit"/>
     <child>

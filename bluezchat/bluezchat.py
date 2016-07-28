@@ -70,6 +70,7 @@ class BluezChatGui:
         self.peers = {}
         self.sources = {}
         self.addresses = {}
+        self.messages = []
 
         # the listening sockets
         self.server_sock = None
@@ -148,9 +149,11 @@ class BluezChatGui:
             sock.close()
         else:
             self.add_text("\n%s - %s" % (address, str(data)))
-            for addr, sock in list(self.peers.items()):
-                if addr != address:
-                    sock.send(str(data))
+            if str(data) not in self.messages:
+                self.messages.append(str(data))
+                for addr, sock in list(self.peers.items()):
+                    if addr != address:
+                        sock.send(str(data))
         return True
 
 # --- other stuff
