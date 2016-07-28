@@ -104,7 +104,10 @@ class BluezChatGui:
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
-            sock.send(text)
+            try:
+                sock.send(text)
+            except:
+                continue
 
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
