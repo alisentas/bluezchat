@@ -148,6 +148,9 @@ class BluezChatGui:
             sock.close()
         else:
             self.add_text("\n%s - %s" % (address, str(data)))
+            for addr, sock in list(self.peers.items()):
+                if addr != address:
+                    sock.send(str(data))
         return True
 
 # --- other stuff
