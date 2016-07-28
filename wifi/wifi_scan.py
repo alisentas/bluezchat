@@ -2,8 +2,8 @@
 
 import socket               # Import socket module
 
-s = socket.socket()         # Create a socket object
-host = socket.gethostname() # Get local machine name
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+host = '172.16.5.116' # Get local machine name
 port = 12345                # Reserve a port for your service.
 s.bind((host, port))        # Bind to the port
 
