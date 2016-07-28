@@ -18,7 +18,7 @@ class Chat:
 			lookup_name = device[1]
 			sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
 			try:
-				sock.settimeout(3)
+				sock.settimeout(5)
 				sock.connect((addr, 0x1001))
 				sock.send("What is the music of life?")
 			except Exception as exception:
@@ -46,6 +46,8 @@ class Chat:
 	def incoming_connection(self, source, condition):
 		sock, info = self.server_sock.accept()
 		address, psm = info
+
+		print address
 
 		# add new connection to list of peers
 		self.peers[address] = sock
