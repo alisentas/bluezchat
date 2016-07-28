@@ -18,15 +18,6 @@ def send_discovery(bdaddr, lookup_name):
 		print "Couldn't connect"
 
 while True:
-	print "Discovery started."
-	target_name = None
-	target_address = None
-
-	peersArray = []
-	index = -1
-
-	processes = []
-
 	nearby_devices = bluetooth.discover_devices(8, True, True)
 
 	print nearby_devices
