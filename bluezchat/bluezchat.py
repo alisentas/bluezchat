@@ -67,8 +67,9 @@ class BluezChatGui:
         # the listening sockets
         self.server_sock = None
         self.server_sock_wifi = None
-        self.server_IP = None
-        self.name = "ali-pc"
+        self.hostname = socket.gethostname()
+        self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
+        self.server_IP_template = self.server_IP[:9]
 
 # --- gui signal handlers
     
@@ -81,7 +82,7 @@ class BluezChatGui:
         gtk.main_quit()
 
     def scan_button_clicked(self, widget):
-        self.quit_button.set_sensitive(False)
+        """self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
         
         self.discovered.clear()
@@ -89,12 +90,14 @@ class BluezChatGui:
             self.discovered.append ((addr, name))
 
         self.quit_button.set_sensitive(True)
-        self.scan_button.set_sensitive(True)
+        self.scan_button.set_sensitive(True)"""
 
         ip_ = 1
-        while ip_ < 254:
+        while ip_ < 255:
             ip_ = ip_ + 1
-            IP = "172.16.5.%d" % ip_
+            IP = self.server_IP_template + str(ip_)
+            if IP == self.server_IP:
+                continue
             # Create two threads as follows
             try:
                 t = threading.Thread(target=self.discover, args=(IP,))
@@ -114,7 +117,7 @@ class BluezChatGui:
         print "Done"
 
     def send_button_clicked(self, widget):
-        text =  str(int(time.time()) % 1000) + "," + self.name + "," + self.input_tb.get_text()
+        text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb.get_text()
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
@@ -126,7 +129,7 @@ class BluezChatGui:
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
         message = s_data_arr[2]
-        self.add_text("\n%s: %s" % (self.name, message))
+        self.add_text("\n%s: %s" % (self.hostname, message))
 
     def chat_button_clicked(self, widget):
         (model, iter) = self.devices_tv.get_selection().get_selected()
@@ -241,7 +244,6 @@ class BluezChatGui:
         gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
 
         self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
         self.server_sock_wifi.bind((self.server_IP, 12345))
         self.server_sock_wifi.listen(5)
 
@@ -255,10 +257,9 @@ class BluezChatGui:
     def discover(self, IP):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(3.0)
-        host = socket.gethostname()
         port = 12345
 
-        server_address = ('IP', 12345)
+        server_address = (IP, 12345)
 
         try:
             sock.connect(server_address)
