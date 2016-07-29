@@ -3,7 +3,7 @@
 
 import socket  
 
-import thread
+import threading
 import time
 
 # Define a function for the thread
