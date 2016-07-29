@@ -8,6 +8,7 @@ import gtk.glade
 
 import bluetooth
 import threading
+import socket
 
 GLADEFILE="bluezchat.glade"
 
@@ -65,6 +66,8 @@ class BluezChatGui:
 
         # the listening sockets
         self.server_sock = None
+        self.server_sock_wifi = None
+        self.server_IP = None
         self.name = "ali-pc"
 
 # --- gui signal handlers
@@ -94,7 +97,7 @@ class BluezChatGui:
             IP = "172.16.5.%d" % ip_
             # Create two threads as follows
             try:
-                t = threading.Thread(target=discover, args=(IP,))
+                t = threading.Thread(target=self.discover, args=(IP,))
                 # Sticks the thread in a list so that it remains accessible
                 self.thread_list.append(t)
             except Exception as e:
@@ -158,9 +161,25 @@ class BluezChatGui:
         self.sources[address] = source
         return True
 
+    def incoming_connection_wifi(self, source, condition):
+        sock, addr = self.server_sock_wifi.accept()
+
+        address = addr[0]
+        if not address in self.addresses:
+            self.add_text("\naccepted connection from %s" % str(addr[0]))
+
+            # add new connection to list of peers
+            self.peers[address] = sock
+            self.addresses[sock] = address
+
+            source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
+            self.sources[address] = source
+            return True
+
     def data_ready(self, sock, condition):
         address = self.addresses[sock]
         data = sock.recv(1024)
+        incoming_type = self.get_socket_type(sock)
 
         if len(data) == 0:
             self.add_text("\nlost connection with %s" % address)
@@ -179,10 +198,19 @@ class BluezChatGui:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
                     if addr != address:
-                        sock.send(s_data)
+                        sock_type = self.get_socket_type(sock)
+                        if not (incoming_type == "wifi" and sock_type != "wifi"):
+                            sock.send(s_data)
         return True
 
 # --- other stuff
+
+    def get_socket_type(self, sock):
+        socket_type = str(type(sock))
+        if socket_type == "<class 'socket._socketobject'>":
+            socket_type = "wifi"
+        else:
+            socket_type = "bluetooth"
 
     def cleanup(self):
         self.hci_sock.close()
@@ -210,8 +238,14 @@ class BluezChatGui:
         self.server_sock.bind(("",0x1001))
         self.server_sock.listen(1)
 
-        gobject.io_add_watch(self.server_sock, 
-                gobject.IO_IN, self.incoming_connection)
+        gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
+
+        self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
+        self.server_sock_wifi.bind((self.server_IP, 12345))
+        self.server_sock_wifi.listen(5)
+
+        gobject.io_add_watch(self.server_sock_wifi, gobject.IO_IN, self.incoming_connection_wifi)
 
     def run(self):
         self.text_buffer.insert(self.text_buffer.get_end_iter(), "loading..")
