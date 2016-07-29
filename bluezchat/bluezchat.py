@@ -123,6 +123,7 @@ class BluezChatGui:
         for addr, sock in list(self.peers.items()):
             try:
                 sock.send(text)
+                print "sent to ", sock
             except:
                 continue
 
@@ -180,11 +181,12 @@ class BluezChatGui:
             return True
 
     def data_ready(self, sock, condition):
+        print "sock:", sock
         address = self.addresses[sock]
         data = sock.recv(1024)
         incoming_type = self.get_socket_type(sock)
 
-        if len(data) == 0 and incoming_type != "wifi":
+        if len(data) == 0:
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
             del self.sources[address]
@@ -192,6 +194,7 @@ class BluezChatGui:
             del self.addresses[sock]
             sock.close()
         else:
+            print "data:[%s]" % data
             s_data = str(data)
             s_data_arr = s_data.split(",")
             name = s_data_arr[1]
