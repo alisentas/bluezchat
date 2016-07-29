@@ -212,8 +212,10 @@ class BluezChatGui:
         socket_type = str(type(sock))
         if socket_type == "<class 'socket._socketobject'>":
             socket_type = "wifi"
+            return socket_type
         else:
             socket_type = "bluetooth"
+            return socket_type
 
     def cleanup(self):
         self.hci_sock.close()
