@@ -184,7 +184,7 @@ class BluezChatGui:
         data = sock.recv(1024)
         incoming_type = self.get_socket_type(sock)
 
-        if len(data) == 0:
+        if len(data) == 0 and incoming_type != "wifi":
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
             del self.sources[address]
