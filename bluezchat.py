@@ -196,10 +196,10 @@ class BluezChatGui:
         print "sock:", sock
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
-        c = sock.recv(1)
+        data = sock.recv(1023)
         print "c:[%s]" % c
-        if c == "1" or c == "2" or c == "3" or c == "4" or c == "5" or c == "6" or c == "7" or c == "8" or c == "9":
-            datalen = int(c)
+        if len(data) > 0:
+            """datalen = int(c)
             c = sock.recv(1)
             while c != ",":
                 datalen *= 10
@@ -209,7 +209,7 @@ class BluezChatGui:
             data = sock.recv(datalen)
 
             print "len:", datalen
-            print "data:[%s]" % data
+            print "data:[%s]" % data"""
             s_data = str(data)
             s_data_arr = s_data.split(",")
             name = s_data_arr[1]
