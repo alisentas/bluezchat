@@ -114,6 +114,8 @@ class BluezChatGui:
         for thread in self.thread_list:
             thread.join()
 
+        del self.thread_list[:]
+
         print "Done"
 
     def send_button_clicked(self, widget):
@@ -268,15 +270,17 @@ class BluezChatGui:
 
         try:
             sock.connect(server_address)
+            #sock.send("4878,ali-pc,asdasd")
             print server_address
-            self.peers[addr] = sock
+            self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
-            self.sources[addr] = source
-            self.addresses[sock] = addr
+            
+            self.sources[IP] = source
+            self.addresses[sock] = IP
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
-            print mesg
+            #print mesg
 
 if __name__ == "__main__":
     gui = BluezChatGui()
