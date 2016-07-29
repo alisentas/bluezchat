@@ -7,6 +7,7 @@ import gobject
 import gtk.glade
 
 import bluetooth
+import threading
 
 GLADEFILE="bluezchat.glade"
 
@@ -79,7 +80,6 @@ class BluezChatGui:
     def scan_button_clicked(self, widget):
         self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
-#        self.chat_button.set_sensitive(False)
         
         self.discovered.clear()
         for addr, name in bluetooth.discover_devices (lookup_names = True):
@@ -87,7 +87,28 @@ class BluezChatGui:
 
         self.quit_button.set_sensitive(True)
         self.scan_button.set_sensitive(True)
-#        self.chat_button.set_sensitive(True)
+
+        ip_ = 1
+        while ip_ < 254:
+            ip_ = ip_ + 1
+            IP = "172.16.5.%d" % ip_
+            # Create two threads as follows
+            try:
+                t = threading.Thread(target=discover, args=(IP,))
+                # Sticks the thread in a list so that it remains accessible
+                self.thread_list.append(t)
+            except Exception as e:
+                template = "An exception of type {0} occured. Arguments:{1!r}"
+                mesg = template.format(type(e).__name__, e.args)
+                print mesg
+
+        for thread in self.thread_list:
+            thread.start()
+
+        for thread in self.thread_list:
+            thread.join()
+
+        print "Done"
 
     def send_button_clicked(self, widget):
         text =  str(int(time.time()) % 1000) + "," + self.name + "," + self.input_tb.get_text()
@@ -207,6 +228,11 @@ class BluezChatGui:
 
         try:
             sock.connect(server_address)
+            print server_address
+            self.peers[addr] = sock
+            source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
+            self.sources[addr] = source
+            self.addresses[sock] = addr
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
