@@ -15,23 +15,10 @@ except:
 
 try:
     import bluetooth
-    bluetoothAvailability = False
+    bluetoothAvailability = True
 except:
     bluetoothAvailability = False
     print "I can\'t use bluetooth in your system, sorry mate :("
-
-def internet_on():
-    try:
-        response=urllib2.urlopen('http://www.google.com',timeout=1)
-        return True
-    except urllib2.URLError as err: pass
-    return False
-
-print internet_on()
-
-if (not internet_on()) and bluetoothAvailability == False:
-    print "You have no internet nor bluetooth, wtf?"
-    sys.exit()
 
 GLADEFILE="bluezchat.glade"
 
@@ -154,7 +141,7 @@ class BluezChatGui:
 
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
-        message = s_data_arr[2]
+        message = s_data_arr[3]
         self.add_text("\n%s: %s" % (self.hostname, message))
 
     def chat_button_clicked(self, widget):
