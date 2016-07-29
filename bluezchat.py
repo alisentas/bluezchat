@@ -1,14 +1,35 @@
 import os
 import sys
 import time
-
-import gtk
-import gobject
-import gtk.glade
-
-import bluetooth
 import threading
 import socket
+import urllib2
+
+try:
+    import gtk
+    import gobject
+    import gtk.glade
+except:
+    print "Please install gtk, gobject and glade packages for Python, exiting."
+    sys.exit()
+
+try:
+    import bluetoothx
+    bluetoothAvailability = True
+except:
+    bluetoothAvailability = False
+    print "I can\'t use bluetooth in your system, sorry mate :("
+
+def internet_on():
+    try:
+        response=urllib2.urlopen('http://74.125.228.100',timeout=1)
+        return True
+    except urllib2.URLError as err: pass
+    return False
+
+if not internet_on() and bluetoothAvailability == False:
+    print "You have no internet nor bluetooth, wtf?"
+    sys.exit()
 
 GLADEFILE="bluezchat.glade"
 
@@ -70,6 +91,8 @@ class BluezChatGui:
         self.hostname = socket.gethostname()
         self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
         self.server_IP_template = self.server_IP[:9]
+        self.wifi_port = 12345
+        self.bluetooth = bluetoothAvailability
 
 # --- gui signal handlers
     
@@ -82,15 +105,15 @@ class BluezChatGui:
         gtk.main_quit()
 
     def scan_button_clicked(self, widget):
-        """self.quit_button.set_sensitive(False)
+        self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
         
-        self.discovered.clear()
-        for addr, name in bluetooth.discover_devices (lookup_names = True):
-            self.discovered.append ((addr, name))
-
-        self.quit_button.set_sensitive(True)
-        self.scan_button.set_sensitive(True)"""
+        if self.bluetooth:
+            self.discovered.clear()
+            for addr, name in bluetooth.discover_devices (lookup_names = True):
+                self.discovered.append ((addr, name))
+        else:
+            print "Bluetooth scan skipped, no bluetooth module found."
 
         ip_ = 1
         while ip_ < 255:
@@ -115,6 +138,9 @@ class BluezChatGui:
             thread.join()
 
         del self.thread_list[:]
+
+        self.quit_button.set_sensitive(True)
+        self.scan_button.set_sensitive(True)
 
         print "Done"
 
@@ -264,9 +290,8 @@ class BluezChatGui:
     def discover(self, IP):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(3.0)
-        port = 12345
 
-        server_address = (IP, 12345)
+        server_address = (IP, self.wifi_port)
 
         try:
             sock.connect(server_address)
