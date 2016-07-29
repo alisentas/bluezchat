@@ -1,14 +1,3 @@
-#!/usr/bin/python
-
-""" A simple graphical chat client to demonstrate the use of pybluez.
-
-Opens a l2cap socket and listens on PSM 0x1001
-
-Provides the ability to scan for nearby bluetooth devices and establish chat
-sessions with them.
-"""
-
-
 import os
 import sys
 import time
@@ -71,10 +60,11 @@ class BluezChatGui:
         self.sources = {}
         self.addresses = {}
         self.messages = []
+        self.thread_list = []
 
         # the listening sockets
         self.server_sock = None
-        self.name = "enes"
+        self.name = "ali-pc"
 
 # --- gui signal handlers
     
@@ -206,6 +196,21 @@ class BluezChatGui:
         self.text_buffer.insert(self.text_buffer.get_end_iter(), "loading..")
         self.start_server()
         gtk.main()
+
+    def discover(self, IP):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(3.0)
+        host = socket.gethostname()
+        port = 12345
+
+        server_address = ('IP', 12345)
+
+        try:
+            sock.connect(server_address)
+        except Exception as e:
+            template = "An exception of type {0} occured. Arguments:{1!r}"
+            mesg = template.format(type(e).__name__, e.args)
+            print mesg
 
 if __name__ == "__main__":
     gui = BluezChatGui()
