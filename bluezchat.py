@@ -14,7 +14,7 @@ except:
     sys.exit()
 
 try:
-    import bluetoothx
+    import bluetooth
     bluetoothAvailability = True
 except:
     bluetoothAvailability = False
@@ -27,7 +27,7 @@ def internet_on():
     except urllib2.URLError as err: pass
     return False
 
-if not internet_on() and bluetoothAvailability == False:
+if (not internet_on()) and bluetoothAvailability == False:
     print "You have no internet nor bluetooth, wtf?"
     sys.exit()
 
@@ -57,8 +57,7 @@ class BluezChatGui:
 
         # prepare the floor listbox
         self.devices_tv = self.main_window_xml.get_widget("devices_tv")
-        self.discovered = gtk.ListStore(gobject.TYPE_STRING, 
-                gobject.TYPE_STRING)
+        self.discovered = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
         self.devices_tv.set_model(self.discovered)
         renderer = gtk.CellRendererText()
         column1=gtk.TreeViewColumn("addr", renderer, text=0)
@@ -95,11 +94,6 @@ class BluezChatGui:
         self.bluetooth = bluetoothAvailability
 
 # --- gui signal handlers
-    
-    def get_name(self, addr):
-        for device in self.discovered:
-            if(device[0] == addr):
-                return device[1]
 
     def quit_button_clicked(self, widget):
         gtk.main_quit()
@@ -211,17 +205,20 @@ class BluezChatGui:
     def data_ready(self, sock, condition):
         print "sock:", sock
         address = self.addresses[sock]
-        data = sock.recv(1024)
         incoming_type = self.get_socket_type(sock)
+        c = sock.recv(1)
+        print "c:[%s]" % c
+        if c == "1" or c == "2" or c == "3" or c == "4" or c == "5" or c == "6" or c == "7" or c == "8" or c == "9":
+            datalen = int(c)
+            c = sock.recv(1)
+            while c != ",":
+                datalen *= 10
+                datalen = datalen + int(c)
+                c = sock.recv(1)
 
-        if len(data) == 0:
-            self.add_text("\nlost connection with %s" % address)
-            gobject.source_remove(self.sources[address])
-            del self.sources[address]
-            del self.peers[address]
-            del self.addresses[sock]
-            sock.close()
-        else:
+            data = sock.recv(datalen)
+
+            print "len:", datalen
             print "data:[%s]" % data
             s_data = str(data)
             s_data_arr = s_data.split(",")
@@ -235,6 +232,14 @@ class BluezChatGui:
                         sock_type = self.get_socket_type(sock)
                         if not (incoming_type == "wifi" and sock_type != "wifi"):
                             sock.send(s_data)
+        else:
+            self.add_text("\nlost connection with %s" % address)
+            gobject.source_remove(self.sources[address])
+            del self.sources[address]
+            del self.peers[address]
+            del self.addresses[sock]
+            sock.close()
+            
         return True
 
 # --- other stuff
@@ -242,11 +247,9 @@ class BluezChatGui:
     def get_socket_type(self, sock):
         socket_type = str(type(sock))
         if socket_type == "<class 'socket._socketobject'>":
-            socket_type = "wifi"
-            return socket_type
+            return "wifi"
         else:
-            socket_type = "bluetooth"
-            return socket_type
+            return "bluetooth"
 
     def cleanup(self):
         self.hci_sock.close()
