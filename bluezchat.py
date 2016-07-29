@@ -15,17 +15,19 @@ except:
 
 try:
     import bluetooth
-    bluetoothAvailability = True
+    bluetoothAvailability = False
 except:
     bluetoothAvailability = False
     print "I can\'t use bluetooth in your system, sorry mate :("
 
 def internet_on():
     try:
-        response=urllib2.urlopen('http://74.125.228.100',timeout=1)
+        response=urllib2.urlopen('http://www.google.com',timeout=1)
         return True
     except urllib2.URLError as err: pass
     return False
+
+print internet_on()
 
 if (not internet_on()) and bluetoothAvailability == False:
     print "You have no internet nor bluetooth, wtf?"
@@ -140,6 +142,7 @@ class BluezChatGui:
 
     def send_button_clicked(self, widget):
         text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb.get_text()
+        text = str(len(text)) + "," + text
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
@@ -280,6 +283,7 @@ class BluezChatGui:
         gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
 
         self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_sock_wifi.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_sock_wifi.bind((self.server_IP, 12345))
         self.server_sock_wifi.listen(5)
 
