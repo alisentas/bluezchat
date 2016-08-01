@@ -11,14 +11,8 @@ try:
     import gtk.glade
 except:
     print "Please install gtk, gobject and glade packages for Python, exiting."
+    print "sudo apt-get install python-gtk2 python-glade2 python-gobject"
     sys.exit()
-bluetoothAvailability = None
-try:
-    import bluetooth
-    bluetoothAvailability = False
-except:
-    bluetoothAvailability = False
-    print "I can\'t use bluetooth in your system, sorry mate :("
 
 try:
     import netifaces
@@ -27,7 +21,23 @@ except:
     print "sudo easy_install netifaces"
     sys.exit()
 
-GLADEFILE="bluezchat.glade"
+bluetoothAvailability = None
+try:
+    import bluetooth
+except:
+    bluetoothAvailability = False
+    print "I can\'t use bluetooth in your system, sorry mate :("
+
+try:
+    bluetoothAvailability = True
+    tempSock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
+    tempSock.settimeout(1)
+    tempSock.connect(("01:23:45:67:89:AB", 0x1001))
+except Exception as e:
+    if "No route to host" in str(e):
+        print "There's something wrong with bluetooth, disabling it"
+        bluetoothAvailability = False
+
 wifi_availability = None
 try:
     print "IP: %s" % (netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]['addr'])
@@ -37,7 +47,12 @@ except:
     print "Wi-fi is not connected, disabling..."
     wifi_availability = False
 
+if bluetoothAvailability:
+    print "Bluetooth is nice and working"
+
 # *****************
+
+GLADEFILE="bluezchat.glade"
 
 def alert(text, buttons=gtk.BUTTONS_NONE, type=gtk.MESSAGE_INFO):
     md = gtk.MessageDialog(buttons=buttons, type=type)
@@ -99,7 +114,7 @@ class BluezChatGui:
         self.wifi_port = None
         self.wifi = wifi_availability
         if wifi_availability:
-            self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
+            self.server_IP = netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]['addr']
             self.server_IP_template = self.server_IP[:9]
             self.wifi_port = 12345
         self.bluetooth = bluetoothAvailability
@@ -148,9 +163,9 @@ class BluezChatGui:
         
         if self.bluetooth:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
-                self.discovered.append ((addr, name))
                 try:
                     self.connect(addr, name)
+                    self.discovered.append ((addr, name))
                 except:
                     print "Connection timed out %s" % name
 
@@ -249,6 +264,15 @@ class BluezChatGui:
             message = s_data_arr[3]
             if dest == "" or dest == self.hostname:
                 self.add_text("\n%s: %s" % (name, message))
+                if dest == self.hostname:
+                    return
+            if dest in self.hosts:
+                keys = self.hosts.keys()
+                values = self.hosts.values()
+                sock = self.peers[keys[values.index(dest)]]
+                sock.send(data)
+                "Data sent to that host"
+                return
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
