@@ -220,11 +220,16 @@ class BluezChatGui:
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
+                    print "addr: %s, sock: %s" % (addr, sock)
+                    print "address = %s" % address
                     if addr != address:
+                        print "address doesnt match"
                         sock_type = self.get_socket_type(sock)
+                        print "sock type: %s" % sock_type
                         if incoming_type == "wifi":
-                            if sock_type != "wifi":
-                                sock.send(s_data)
+                            if sock_type == "wifi":
+                                continue
+                        sock.send(s_data)
         else:
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
@@ -272,12 +277,13 @@ class BluezChatGui:
 
         gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
 
-        self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_sock_wifi.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_sock_wifi.bind((self.server_IP, 12345))
-        self.server_sock_wifi.listen(5)
+        if self.wifi:
+            self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_sock_wifi.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.server_sock_wifi.bind((self.server_IP, 12345))
+            self.server_sock_wifi.listen(5)
 
-        gobject.io_add_watch(self.server_sock_wifi, gobject.IO_IN, self.incoming_connection_wifi)
+            gobject.io_add_watch(self.server_sock_wifi, gobject.IO_IN, self.incoming_connection_wifi)
 
     def run(self):
         self.text_buffer.insert(self.text_buffer.get_end_iter(), "loading..")
