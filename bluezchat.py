@@ -12,18 +12,30 @@ try:
 except:
     print "Please install gtk, gobject and glade packages for Python, exiting."
     sys.exit()
-
+bluetoothAvailability = None
 try:
     import bluetooth
-    bluetoothAvailability = True
+    bluetoothAvailability = False
 except:
     bluetoothAvailability = False
     print "I can\'t use bluetooth in your system, sorry mate :("
 
-GLADEFILE="bluezchat.glade"
+try:
+    import netifaces
+except:
+    print "Install netifaces"
+    print "sudo easy_install netifaces"
+    sys.exit()
 
-wifi_availability = True
-bluetoothAvailability = True
+GLADEFILE="bluezchat.glade"
+wifi_availability = None
+try:
+    print "IP: %s" % (netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]['addr'])
+    print "Wi-fi interface found"
+    wifi_availability = True
+except:
+    print "Wi-fi is not connected, disabling..."
+    wifi_availability = False
 
 # *****************
 
@@ -101,6 +113,7 @@ class BluezChatGui:
     def scan_button_clicked(self, widget):
         self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
+        self.discovered.clear()
 
         # Inititiate WIFI Scan ##############################################
 
@@ -134,7 +147,6 @@ class BluezChatGui:
         # Initiate bluetooth scan ###########################################
         
         if self.bluetooth:
-            self.discovered.clear()
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 self.discovered.append ((addr, name))
                 try:
@@ -227,7 +239,10 @@ class BluezChatGui:
             if not s_data_arr[0].isdigit():
                 print "it is numeric"
                 self.hosts[address] = s_data_arr[0]
+                self.discovered.append ((address, s_data_arr[0]))
                 print self.hosts
+                if s_data_arr[1] == "1":
+                    sock.send(self.hostname + ",2")
                 return True
             name = s_data_arr[1]
             dest = s_data_arr[2]
@@ -320,7 +335,7 @@ class BluezChatGui:
             sock.connect(server_address)
             #sock.send("4878,ali-pc,asdasd")
             print server_address
-            sock.send(self.hostname)
+            sock.send(self.hostname + ",1")
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
             
