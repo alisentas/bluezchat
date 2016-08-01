@@ -34,7 +34,7 @@
               <widget class="GtkVBox" id="vbox2">
                 <property name="visible">True</property>
  <child>
-              <widget class="G	tkEntry" id="input_tb2">
+              <widget class="GtkEntry" id="input_tb2">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">*</property>

@@ -65,7 +65,7 @@ class BluezChatGui:
         self.text_buffer = self.main_text.get_buffer()
 
         self.input_tb = self.main_window_xml.get_widget("input_tb")
-        self.input_tb = self.main_window_xml.get_widget("input_tb2")
+        self.input_tb2 = self.main_window_xml.get_widget("input_tb2")
 
         self.listed_devs = []
 
@@ -94,7 +94,8 @@ class BluezChatGui:
 # --- gui signal handlers
 
     def quit_button_clicked(self, widget):
-        gtk.main_quit()
+        print self.input_tb2.get_text()
+        #gtk.main_quit()
 
     def scan_button_clicked(self, widget):
         self.quit_button.set_sensitive(False)
@@ -144,7 +145,7 @@ class BluezChatGui:
         print "Done"
 
     def send_button_clicked(self, widget):
-        text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb.get_text()
+        text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb2.get_text() + "," + self.input_tb.get_text()
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
@@ -216,8 +217,10 @@ class BluezChatGui:
             s_data = str(data)
             s_data_arr = s_data.split(",")
             name = s_data_arr[1]
-            message = s_data_arr[2]
-            self.add_text("\n%s: %s" % (name, message))
+            dest = s_data_arr[2]
+            message = s_data_arr[3]
+            if(dest == ""):
+                self.add_text("\n%s: %s" % (name, message))
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
