@@ -118,7 +118,7 @@ class BluezChatGui:
             self.server_IP_template = self.server_IP[:9]
             self.wifi_port = 12345
         self.bluetooth = bluetoothAvailability
-        self.bluetoothConnType = bluetooth.RFCOMM
+        self.bluetoothConnType = bluetooth.L2CAP
 
 # --- gui signal handlers
 
