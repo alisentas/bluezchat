@@ -129,7 +129,6 @@ class BluezChatGui:
 
     def send_button_clicked(self, widget):
         text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb.get_text()
-        text = str(len(text)) + "," + text
         if len(text) == 0: return
 
         for addr, sock in list(self.peers.items()):
@@ -197,19 +196,7 @@ class BluezChatGui:
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
         data = sock.recv(1023)
-        print "c:[%s]" % c
         if len(data) > 0:
-            """datalen = int(c)
-            c = sock.recv(1)
-            while c != ",":
-                datalen *= 10
-                datalen = datalen + int(c)
-                c = sock.recv(1)
-
-            data = sock.recv(datalen)
-
-            print "len:", datalen
-            print "data:[%s]" % data"""
             s_data = str(data)
             s_data_arr = s_data.split(",")
             name = s_data_arr[1]
@@ -220,8 +207,9 @@ class BluezChatGui:
                 for addr, sock in list(self.peers.items()):
                     if addr != address:
                         sock_type = self.get_socket_type(sock)
-                        if not (incoming_type == "wifi" and sock_type != "wifi"):
-                            sock.send(s_data)
+                        if incoming_type == "wifi":
+                            if sock_type != "wifi":
+                                sock.send(s_data)
         else:
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
