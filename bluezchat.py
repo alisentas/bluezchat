@@ -279,7 +279,10 @@ class BluezChatGui:
             del self.sources[address]
             del self.peers[address]
             del self.addresses[sock]
-            del self.discovered[address]
+            for row in self.discovered:
+                if row[0] == address:
+                    self.discovered.remove(row.iter)
+                    break
             sock.close()
             
         return True
