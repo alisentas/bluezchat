@@ -1,50 +1,55 @@
 import os
-import sys
-import time
-import threading
-import socket
-import urllib2
-import datetime
+import sys         # for sys.exit
+import time        # to get current timestamp
+import threading   # for threads
+import socket      # wifi sockets
+import datetime    # for datetime column in db
 
 try:
     import sqlite3
-    conn = sqlite3.connect("bluezchat.db")
+    conn = sqlite3.connect("bluezchat.db") # create new database connection
 except:
     print "Install sqlite3 first"
 
 try:
     import gtk
     import gobject
-    import gtk.glade
+    import gtk.glade  # gtk is interface, gobject is event handler for gtk
 except:
     print "Please install gtk, gobject and glade packages for Python, exiting."
     print "sudo apt-get install python-gtk2 python-glade2 python-gobject"
     sys.exit()
 
 try:
-    import netifaces
+    import netifaces # this is required to get wifi IP and check if connected to wifi
 except:
     print "Install netifaces"
     print "sudo easy_install netifaces"
     sys.exit()
 
 bluetoothAvailability = None
+
+# try to import bluetooth, if it is not found, disable bluetooth
 try:
     import bluetooth
 except:
     bluetoothAvailability = False
     print "I can\'t use bluetooth in your system, sorry mate :("
 
-try:
-    bluetoothAvailability = True
-    tempSock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
-    tempSock.settimeout(1)
-    tempSock.connect(("01:23:45:67:89:AB", 0x1001))
-except Exception as e:
-    if "No route to host" in str(e):
-        print "There's something wrong with bluetooth, disabling it"
-        bluetoothAvailability = False
+# try to open a temporary socket to test if bluetooth is on on the device
+# if this raises an error, bluetooth is disabled on the device
+if bluetoothAvailability != False:
+    try:
+        bluetoothAvailability = True
+        tempSock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
+        tempSock.settimeout(1)
+        tempSock.connect(("01:23:45:67:89:AB", 0x1001))
+    except Exception as e:
+        if "No route to host" in str(e):
+            print "There's something wrong with bluetooth, disabling it"
+            bluetoothAvailability = False
 
+# try to get IP address of the device, if not wi-fi will be disabled
 wifi_availability = None
 try:
     print "IP: %s" % (netifaces.ifaddresses(netifaces.gateways()['default'][netifaces.AF_INET][1])[netifaces.AF_INET][0]['addr'])
@@ -54,8 +59,16 @@ except:
     print "Wi-fi is not connected, disabling..."
     wifi_availability = False
 
-if bluetoothAvailability:
-    print "Bluetooth is nice and working"
+# print wfi and bluetooth status, if both are disabled exit
+if wifi_availability and bluetoothAvailability:
+    print "Wi-Fi and bluetooth are both nice and working."
+elif wifi_availability:
+    print "Wifi is working, bluetooth is not"
+elif bluetoothAvailability:
+    print "Bluetooth is nice and working, wi-fi is not."
+else:
+    print "You can't use this program without wifi or bluetooth, exiting..."
+    sys.exit()
 
 # *****************
 
