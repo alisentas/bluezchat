@@ -119,6 +119,7 @@ class BluezChatGui:
             self.wifi_port = 12345
         self.bluetooth = bluetoothAvailability
         self.bluetoothConnType = bluetooth.L2CAP
+        self.bluetoothPort = 0x1001
 
 # --- gui signal handlers
 
