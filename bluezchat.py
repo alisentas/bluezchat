@@ -165,6 +165,7 @@ class BluezChatGui:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 try:
                     self.connect(addr, name)
+                    print (addr, name)
                     self.discovered.append ((addr, name))
                 except:
                     print "Connection timed out %s" % name
@@ -197,9 +198,10 @@ class BluezChatGui:
         (model, iter) = self.devices_tv.get_selection().get_selected()
         if iter is not None:
             addr = model.get_value(iter, 0)
+            name = model.get_value(iter, 1)
             if addr not in self.peers:
                 self.add_text("\nconnecting to %s" % addr)
-                self.connect(addr)
+                self.connect(addr, name)
             else:
                 self.add_text("\nAlready connected to %s!" % addr)
 
@@ -265,14 +267,14 @@ class BluezChatGui:
             if dest == "" or dest == self.hostname:
                 self.add_text("\n%s: %s" % (name, message))
                 if dest == self.hostname:
-                    return
+                    return True
             if dest in self.hosts:
                 keys = self.hosts.keys()
                 values = self.hosts.values()
                 sock = self.peers[keys[values.index(dest)]]
                 sock.send(data)
                 "Data sent to that host"
-                return
+                return True
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
@@ -313,7 +315,7 @@ class BluezChatGui:
         sock.settimeout(3)
         try:
             sock.connect((addr, 0x1001))
-            sock.send(self.hostname)
+            sock.send(self.hostname + ",1")
         except bluez.error as e:
             self.add_text("\n%s" % str(e))
             sock.close()
