@@ -33,6 +33,17 @@
             <child>
               <widget class="GtkVBox" id="vbox2">
                 <property name="visible">True</property>
+ <child>
+              <widget class="G	tkEntry" id="input_tb2">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">*</property>
+              </widget>
+              <packing>
+                <property name="padding">3</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
                 <child>
                   <widget class="GtkButton" id="quit_button">
                     <property name="visible">True</property>
@@ -95,7 +106,7 @@
             <child>
               <widget class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">text:</property>
+                <property name="label" translatable="yes">Message:</property>
               </widget>
               <packing>
                 <property name="expand">False</property>

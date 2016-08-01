@@ -65,7 +65,6 @@ class BluezChatGui:
         self.text_buffer = self.main_text.get_buffer()
 
         self.input_tb = self.main_window_xml.get_widget("input_tb")
-        self.input_tb = self.main_window_xml.get_widget("input_tb2")
 
         self.listed_devs = []
 
