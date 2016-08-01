@@ -136,6 +136,11 @@ class BluezChatGui:
             self.discovered.clear()
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 self.discovered.append ((addr, name))
+                try:
+                    self.connect(addr)
+                except:
+                    print "Connection timed out %s" % name
+
         else:
             print "Bluetooth scan skipped, no bluetooth module found."
 
@@ -258,6 +263,7 @@ class BluezChatGui:
 
     def connect(self, addr):
         sock = bluetooth.BluetoothSocket (bluetooth.L2CAP)
+        sock.settimeout(3)
         try:
             sock.connect((addr, 0x1001))
         except bluez.error as e:
