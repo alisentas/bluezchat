@@ -4,6 +4,13 @@ import time
 import threading
 import socket
 import urllib2
+import datetime
+
+try:
+    import sqlite3
+    conn = sqlite3.connect("bluezchat.db")
+except:
+    print "Install sqlite3 first"
 
 try:
     import gtk
@@ -95,8 +102,6 @@ class BluezChatGui:
 
         self.listed_devs = []
 
-
-
         self.peers = {}
         self.sources = {}
         self.addresses = {}
@@ -182,6 +187,10 @@ class BluezChatGui:
         text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb2.get_text() + "," + self.input_tb.get_text()
         if len(text) == 0: return
 
+        if self.input_tb2.get_text() not in self.hosts:
+            conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
+            conn.commit()
+
         for addr, sock in list(self.peers.items()):
             try:
                 sock.send(text)
@@ -264,6 +273,8 @@ class BluezChatGui:
                 sock.send(data)
                 "Data sent to that host"
                 return True
+            else:
+                conn.execute("INSERT INTO messages VALUES (%s, %s, %s, %s, %s)", s_data_arr[0], s_data_arr[1], s_data_arr[2], datetime.datetime().now(), s_data_arr[3])
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
