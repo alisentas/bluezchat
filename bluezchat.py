@@ -125,8 +125,7 @@ class BluezChatGui:
 # --- gui signal handlers
 
     def quit_button_clicked(self, widget):
-        print self.input_tb2.get_text()
-        #gtk.main_quit()
+        gtk.main_quit()
 
     def scan_button_clicked(self, widget):
         self.quit_button.set_sensitive(False)
@@ -175,9 +174,6 @@ class BluezChatGui:
                     mesg = template.format(type(e).__name__, e.args)
                     print mesg
 
-        else:
-            print "Bluetooth scan skipped, no bluetooth module found."
-
         self.quit_button.set_sensitive(True)
         self.scan_button.set_sensitive(True)
 
@@ -225,9 +221,7 @@ class BluezChatGui:
 
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()
-        #print "sock:%s, info:%s" % (sock, info)
         address, psm = info
-        #print "address: %s, psm: %s" % (address, psm)
 
         self.add_text("\naccepted connection from %s" % str(address))
 
@@ -263,7 +257,6 @@ class BluezChatGui:
             s_data = str(data)
             s_data_arr = s_data.split(",")
             if not s_data_arr[0].isdigit():
-                print "it is numeric"
                 self.hosts[address] = s_data_arr[0]
                 self.discovered.append ((address, s_data_arr[0]))
                 print self.hosts
@@ -287,12 +280,8 @@ class BluezChatGui:
             if s_data not in self.messages:
                 self.messages.append(s_data)
                 for addr, sock in list(self.peers.items()):
-                    print "addr: %s, sock: %s" % (addr, sock)
-                    print "address = %s" % address
                     if addr != address:
-                        print "address doesnt match"
                         sock_type = self.get_socket_type(sock)
-                        print "sock type: %s" % sock_type
                         if incoming_type == "wifi":
                             if sock_type == "wifi":
                                 continue
@@ -303,6 +292,7 @@ class BluezChatGui:
             del self.sources[address]
             del self.peers[address]
             del self.addresses[sock]
+            del self.discovered[address]
             sock.close()
             
         return True
@@ -370,8 +360,6 @@ class BluezChatGui:
 
         try:
             sock.connect(server_address)
-            #sock.send("4878,ali-pc,asdasd")
-            print server_address
             sock.send(self.hostname + ",1")
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
