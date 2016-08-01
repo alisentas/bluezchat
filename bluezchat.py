@@ -118,6 +118,7 @@ class BluezChatGui:
             self.server_IP_template = self.server_IP[:9]
             self.wifi_port = 12345
         self.bluetooth = bluetoothAvailability
+        self.bluetoothConnType = bluetooth.RFCOMM
 
 # --- gui signal handlers
 
@@ -311,7 +312,7 @@ class BluezChatGui:
         self.hci_sock.close()
 
     def connect(self, addr, name):
-        sock = bluetooth.BluetoothSocket (bluetooth.L2CAP)
+        sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
         sock.settimeout(3)
         try:
             sock.connect((addr, 0x1001))
@@ -332,7 +333,7 @@ class BluezChatGui:
         self.text_buffer.insert(self.text_buffer.get_end_iter(), text)
 
     def start_server(self):
-        self.server_sock = bluetooth.BluetoothSocket (bluetooth.L2CAP)
+        self.server_sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
         self.server_sock.bind(("",0x1001))
         self.server_sock.listen(1)
 
