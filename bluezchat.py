@@ -74,6 +74,7 @@ class BluezChatGui:
         self.peers = {}
         self.sources = {}
         self.addresses = {}
+        self.hosts = {}
         self.messages = []
         self.thread_list = []
 
@@ -137,7 +138,7 @@ class BluezChatGui:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 self.discovered.append ((addr, name))
                 try:
-                    self.connect(addr)
+                    self.connect(addr, name)
                 except:
                     print "Connection timed out %s" % name
 
@@ -186,7 +187,9 @@ class BluezChatGui:
 
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()
+        #print "sock:%s, info:%s" % (sock, info)
         address, psm = info
+        #print "address: %s, psm: %s" % (address, psm)
 
         self.add_text("\naccepted connection from %s" % str(address))
 
@@ -221,6 +224,11 @@ class BluezChatGui:
         if len(data) > 0:
             s_data = str(data)
             s_data_arr = s_data.split(",")
+            if not s_data_arr[0].isdigit():
+                print "it is numeric"
+                self.hosts[address] = s_data_arr[0]
+                print self.hosts
+                return True
             name = s_data_arr[1]
             dest = s_data_arr[2]
             message = s_data_arr[3]
@@ -261,17 +269,19 @@ class BluezChatGui:
     def cleanup(self):
         self.hci_sock.close()
 
-    def connect(self, addr):
+    def connect(self, addr, name):
         sock = bluetooth.BluetoothSocket (bluetooth.L2CAP)
         sock.settimeout(3)
         try:
             sock.connect((addr, 0x1001))
+            sock.send(self.hostname)
         except bluez.error as e:
             self.add_text("\n%s" % str(e))
             sock.close()
             return
 
         self.peers[addr] = sock
+        self.hosts[sock] = name
         source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
         self.sources[addr] = source
         self.addresses[sock] = addr
@@ -310,6 +320,7 @@ class BluezChatGui:
             sock.connect(server_address)
             #sock.send("4878,ali-pc,asdasd")
             print server_address
+            sock.send(self.hostname)
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
             
