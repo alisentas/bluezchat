@@ -170,8 +170,6 @@ class BluezChatGui:
                 try:
                     print "Trying to connect %s" %  name
                     self.connect(addr, name)
-                    print (addr, name)
-                    self.discovered.append ((addr, name))
                 except Exception as e:
                     template = "An exception of type {0} occured. Arguments:{1!r}"
                     mesg = template.format(type(e).__name__, e.args)
@@ -217,6 +215,7 @@ class BluezChatGui:
 
     def devices_tv_cursor_changed(self, widget):
         (model, iter) = self.devices_tv.get_selection().get_selected()
+        self.input_tb2.set_text(model.get_value(iter, 1))
         if iter is not None:
             self.chat_button.set_sensitive(True)
         else:
@@ -382,7 +381,7 @@ class BluezChatGui:
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
-            print mesg
+            #print mesg
 
 if __name__ == "__main__":
     gui = BluezChatGui()
