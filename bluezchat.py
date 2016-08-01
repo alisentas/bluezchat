@@ -120,7 +120,7 @@ class BluezChatGui:
         self.bluetooth = bluetoothAvailability
         self.bluetoothConnType = bluetooth.L2CAP
         self.bluetoothPort = 0x1001
-        self.timeout = 15
+        self.timeout = 10
 
 # --- gui signal handlers
 
@@ -168,7 +168,7 @@ class BluezChatGui:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 print "(%s, %s)" % (addr, name)
                 try:
-                    print "Trying to connect %S" %  name
+                    print "Trying to connect %s" %  name
                     self.connect(addr, name)
                     print (addr, name)
                     self.discovered.append ((addr, name))
@@ -176,7 +176,6 @@ class BluezChatGui:
                     template = "An exception of type {0} occured. Arguments:{1!r}"
                     mesg = template.format(type(e).__name__, e.args)
                     print mesg
-                    #print "Connection timed out %s" % name
 
         else:
             print "Bluetooth scan skipped, no bluetooth module found."
@@ -194,7 +193,10 @@ class BluezChatGui:
             try:
                 sock.send(text)
                 print "sent to ", sock
-            except:
+            except Exception as e:
+                template = "An exception of type {0} occured. Arguments:{1!r}"
+                mesg = template.format(type(e).__name__, e.args)
+                print mesg:
                 continue
 
         self.input_tb.set_text("")
@@ -324,8 +326,10 @@ class BluezChatGui:
         try:
             sock.connect((addr, self.bluetoothPort))
             sock.send(self.hostname + ",1")
-        except bluez.error as e:
-            self.add_text("\n%s" % str(e))
+        except Exception as e:
+            template = "An exception of type {0} occured. Arguments:{1!r}"
+            mesg = template.format(type(e).__name__, e.args)
+            print mesg
             sock.close()
             return
 
@@ -378,7 +382,7 @@ class BluezChatGui:
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
-            #print mesg
+            print mesg
 
 if __name__ == "__main__":
     gui = BluezChatGui()
