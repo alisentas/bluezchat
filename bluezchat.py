@@ -157,7 +157,7 @@ class BluezChatGui:
 
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
-        message = s_data_arr[2]
+        message = s_data_arr[3]
         self.add_text("\n%s: %s" % (self.hostname, message))
 
     def chat_button_clicked(self, widget):
@@ -233,7 +233,7 @@ class BluezChatGui:
                         if incoming_type == "wifi":
                             if sock_type == "wifi":
                                 continue
-                        sock.send(s_data)
+                        sock.send(data)
         else:
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
