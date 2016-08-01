@@ -196,7 +196,7 @@ class BluezChatGui:
             except Exception as e:
                 template = "An exception of type {0} occured. Arguments:{1!r}"
                 mesg = template.format(type(e).__name__, e.args)
-                print mesg:
+                print mesg
                 continue
 
         self.input_tb.set_text("")
