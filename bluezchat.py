@@ -171,12 +171,21 @@ class BluezChatGui:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 print "(%s, %s)" % (addr, name)
                 try:
-                    print "Trying to connect %s" %  name
-                    self.connect(addr, name)
+                    t = threading.Thread(target=self.discover_bluetooth, args=(addr, name,))
+                    # Sticks the thread in a list so that it remains accessible
+                    self.thread_list.append(t)
                 except Exception as e:
                     template = "An exception of type {0} occured. Arguments:{1!r}"
                     mesg = template.format(type(e).__name__, e.args)
                     print mesg
+
+            for thread in self.thread_list:
+                thread.start()
+
+            for thread in self.thread_list:
+                thread.join()
+
+            del self.thread_list[:]
 
         self.quit_button.set_sensitive(True)
         self.scan_button.set_sensitive(True)
@@ -371,6 +380,15 @@ class BluezChatGui:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
             #print mesg
+
+    def discover_bluetooth(self, addr, name):
+        try:
+            print "Trying to connect %s" %  name
+            self.connect(addr, name)
+        except Exception as e:
+            template = "An exception of type {0} occured. Arguments:{1!r}"
+            mesg = template.format(type(e).__name__, e.args)
+            print mesg
 
 if __name__ == "__main__":
     gui = BluezChatGui()
