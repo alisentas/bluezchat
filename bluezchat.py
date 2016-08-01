@@ -219,7 +219,7 @@ class BluezChatGui:
             name = s_data_arr[1]
             dest = s_data_arr[2]
             message = s_data_arr[3]
-            if(dest == ""):
+            if dest == "" or dest == self.hostname:
                 self.add_text("\n%s: %s" % (name, message))
             if s_data not in self.messages:
                 self.messages.append(s_data)
