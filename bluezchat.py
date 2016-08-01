@@ -166,13 +166,17 @@ class BluezChatGui:
         
         if self.bluetooth:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
+                print "(%s, %s)" % (addr, name)
                 try:
                     print "Trying to connect %S" %  name
                     self.connect(addr, name)
                     print (addr, name)
                     self.discovered.append ((addr, name))
-                except:
-                    print "Connection timed out %s" % name
+                except Exception as e:
+                    template = "An exception of type {0} occured. Arguments:{1!r}"
+                    mesg = template.format(type(e).__name__, e.args)
+                    print mesg
+                    #print "Connection timed out %s" % name
 
         else:
             print "Bluetooth scan skipped, no bluetooth module found."
