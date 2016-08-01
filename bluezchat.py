@@ -120,6 +120,7 @@ class BluezChatGui:
         self.bluetooth = bluetoothAvailability
         self.bluetoothConnType = bluetooth.L2CAP
         self.bluetoothPort = 0x1001
+        self.timeout = 15
 
 # --- gui signal handlers
 
@@ -166,6 +167,7 @@ class BluezChatGui:
         if self.bluetooth:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 try:
+                    print "Trying to connect %S" %  name
                     self.connect(addr, name)
                     print (addr, name)
                     self.discovered.append ((addr, name))
@@ -314,9 +316,9 @@ class BluezChatGui:
 
     def connect(self, addr, name):
         sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
-        sock.settimeout(3)
+        sock.settimeout(self.timeout)
         try:
-            sock.connect((addr, 0x1001))
+            sock.connect((addr, self.bluetoothPort))
             sock.send(self.hostname + ",1")
         except bluez.error as e:
             self.add_text("\n%s" % str(e))
@@ -335,7 +337,7 @@ class BluezChatGui:
 
     def start_server(self):
         self.server_sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
-        self.server_sock.bind(("",0x1001))
+        self.server_sock.bind(("",self.bluetoothPort))
         self.server_sock.listen(1)
 
         gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
