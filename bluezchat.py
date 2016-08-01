@@ -22,6 +22,9 @@ except:
 
 GLADEFILE="bluezchat.glade"
 
+wifi_availability = True
+bluetoothAvailability = True
+
 # *****************
 
 def alert(text, buttons=gtk.BUTTONS_NONE, type=gtk.MESSAGE_INFO):
@@ -77,9 +80,14 @@ class BluezChatGui:
         self.server_sock = None
         self.server_sock_wifi = None
         self.hostname = socket.gethostname()
-        self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
-        self.server_IP_template = self.server_IP[:9]
-        self.wifi_port = 12345
+        self.server_IP = None
+        self.server_IP_template = None
+        self.wifi_port = None
+        self.wifi = wifi_availability
+        if wifi_availability:
+            self.server_IP = str([(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1])
+            self.server_IP_template = self.server_IP[:9]
+            self.wifi_port = 12345
         self.bluetooth = bluetoothAvailability
 
 # --- gui signal handlers
@@ -90,6 +98,37 @@ class BluezChatGui:
     def scan_button_clicked(self, widget):
         self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
+
+        # Inititiate WIFI Scan ##############################################
+
+        if self.wifi:
+            ip_ = 1
+            while ip_ < 255:
+                ip_ = ip_ + 1
+                IP = self.server_IP_template + str(ip_)
+                if IP == self.server_IP:
+                    continue
+                # Create two threads as follows
+                try:
+                    t = threading.Thread(target=self.discover, args=(IP,))
+                    # Sticks the thread in a list so that it remains accessible
+                    self.thread_list.append(t)
+                except Exception as e:
+                    template = "An exception of type {0} occured. Arguments:{1!r}"
+                    mesg = template.format(type(e).__name__, e.args)
+                    print mesg
+
+            for thread in self.thread_list:
+                thread.start()
+
+            for thread in self.thread_list:
+                thread.join()
+
+            del self.thread_list[:]
+        else:
+            "Wifi scan skipped, not connected to wifi."
+
+        # Initiate bluetooth scan ###########################################
         
         if self.bluetooth:
             self.discovered.clear()
@@ -97,30 +136,6 @@ class BluezChatGui:
                 self.discovered.append ((addr, name))
         else:
             print "Bluetooth scan skipped, no bluetooth module found."
-
-        ip_ = 1
-        while ip_ < 255:
-            ip_ = ip_ + 1
-            IP = self.server_IP_template + str(ip_)
-            if IP == self.server_IP:
-                continue
-            # Create two threads as follows
-            try:
-                t = threading.Thread(target=self.discover, args=(IP,))
-                # Sticks the thread in a list so that it remains accessible
-                self.thread_list.append(t)
-            except Exception as e:
-                template = "An exception of type {0} occured. Arguments:{1!r}"
-                mesg = template.format(type(e).__name__, e.args)
-                print mesg
-
-        for thread in self.thread_list:
-            thread.start()
-
-        for thread in self.thread_list:
-            thread.join()
-
-        del self.thread_list[:]
 
         self.quit_button.set_sensitive(True)
         self.scan_button.set_sensitive(True)
@@ -140,7 +155,7 @@ class BluezChatGui:
 
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
-        message = s_data_arr[3]
+        message = s_data_arr[2]
         self.add_text("\n%s: %s" % (self.hostname, message))
 
     def chat_button_clicked(self, widget):
@@ -192,10 +207,10 @@ class BluezChatGui:
             return True
 
     def data_ready(self, sock, condition):
-        print "sock:", sock
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
         data = sock.recv(1023)
+        print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
         if len(data) > 0:
             s_data = str(data)
             s_data_arr = s_data.split(",")
