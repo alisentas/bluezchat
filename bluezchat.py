@@ -4,6 +4,7 @@ import time        # to get current timestamp
 import threading   # for threads
 import socket      # wifi sockets
 import datetime    # for datetime column in db
+import calendar
 
 try:
     import sqlite3
@@ -206,8 +207,14 @@ class BluezChatGui:
         print "Done"
 
     def send_button_clicked(self, widget):
-        text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb2.get_text() + "," + self.input_tb.get_text()
-        if len(text) == 0: return
+        mhash = int(time.time()) % 1000
+        host = self.hostname
+        dest = self.input_tb2.get_text()
+        mtime = datetime.datetime.now()
+        message = self.input_tb.get_text()
+        
+        data = "%s,%s,%s,%s,%s" % (mhash, host, dest, mtime, message)
+        if len(data) == 0: return
         #we can store input_tb2.get_text() before the text = line, may be it can be changed
         if self.input_tb2.get_text() not in self.hosts:
             conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
@@ -215,7 +222,7 @@ class BluezChatGui:
 
         for addr, sock in list(self.peers.items()):
             try:
-                sock.send(text)
+                sock.send(data)
                 print "sent to ", sock
             except Exception as e:
                 template = "An exception of type {0} occured. Arguments:{1!r}"
@@ -224,10 +231,8 @@ class BluezChatGui:
                 continue
 
         self.input_tb.set_text("")
-        s_data_arr = text.split(",")
-        message = s_data_arr[3]
         #we can concanete the whole message here, before printing it. Because it can contain commas
-        self.add_text("\n%s: %s" % (self.hostname, message))
+        self.add_text("\n%s %s: %s" % (self.get_time(mtime), self.hostname, message))
 
     
 
@@ -240,6 +245,13 @@ class BluezChatGui:
 
     def get_data(self, mhash, host, dest, mtime, message):
         return str(mhash) + "," + host + "," + dest + "," + mtime + "," + message
+
+    def get_time(self, datetimeObj):
+        now = datetime.datetime.now()
+        if now.month == datetimeObj.month and now.day == datetimeObj.day and now.year == datetimeObj.year:
+            return "%s:%s" % (datetimeObj.hour, datetimeObj.minute)
+        else:
+            return "%s %s %s:%s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()
@@ -295,11 +307,11 @@ class BluezChatGui:
             mhash = s_data_arr[0]
             name = s_data_arr[1]
             dest = s_data_arr[2]
-            mtime = s_data_arr[3]
+            mtime = datetime.datetime.strptime(s_data_arr[3], '%b %d %Y %I:%M%p')
             message = ",".join(s_data_arr[4:])
 
             if dest == "" or dest == self.hostname:
-                self.add_text("\n%s: %s" % (name, message))
+                self.add_text("\n%s %s: %s" % (self.get_time(mtime), name, message))
                 if dest == self.hostname:
                     return True
 
