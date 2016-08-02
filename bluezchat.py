@@ -223,10 +223,10 @@ class BluezChatGui:
         if dest != "":
             if dest in self.hosts.keys():
                 if self.hosts[dest][0] != 0:
-                    sock = self.peers[self.host[dest][0]]
+                    sock = self.peers[self.hosts[dest][0]]
                     sock.send(data + "\t")
                 else:
-                    sock = self.peers[self.host[dest][1]]
+                    sock = self.peers[self.hosts[dest][1]]
                     sock.send(data + "\t")
                 print "Data sent to that host"
                 return True
@@ -371,10 +371,10 @@ class BluezChatGui:
             if dest != "":
                 if dest in self.hosts.keys():
                     if self.hosts[dest][0] != 0 and incoming_type != "wifi":
-                        sock = self.peers[self.host[dest][0]]
+                        sock = self.peers[self.hosts[dest][0]]
                         sock.send(data + "\t")
                     else:
-                        sock = self.peers[self.host[dest][1]]
+                        sock = self.peers[self.hosts[dest][1]]
                         sock.send(data + "\t")
                     print "Data sent to that host"
                     return True
