@@ -229,32 +229,31 @@ class BluezChatGui:
                     sock = self.peers[self.hosts[dest][1]]
                     sock.send(data + "\t")
                 print "Data sent to that host"
-                return True
             else:
                 conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
                 conn.commit()
                 print "Message queued, also sent to others."
-                self.messages.append(s_data)
+                self.messages.append(data)
                 for hostKey in self.hosts.keys():
                     if hostKey == host:
                         continue
                     if self.hosts[hostKey][0] != 0:
                         sock = self.peers[self.hosts[hostKey][0]]
-                        sock.send(s_data + "\t")
+                        sock.send(data + "\t")
                     else:
                         sock = self.peers[self.hosts[hostKey][1]]
-                        sock.send(s_data + "\t")
+                        sock.send(data + "\t")
         else:
-            self.messages.append(s_data)
+            self.messages.append(data)
             for hostKey in self.hosts.keys():
                 if hostKey == host:
                     continue
                 if self.hosts[hostKey][0] != 0:
                     sock = self.peers[self.hosts[hostKey][0]]
-                    sock.send(s_data + "\t")
+                    sock.send(data + "\t")
                 else:
                     sock = self.peers[self.hosts[hostKey][1]]
-                    sock.send(s_data + "\t")
+                    sock.send(data + "\t")
 
         self.input_tb.set_text("")
         #we can concanete the whole message here, before printing it. Because it can contain commas
@@ -475,7 +474,7 @@ class BluezChatGui:
 
     def discover(self, IP):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(3.0)
+        sock.settimeout(10.0)
 
         server_address = (IP, self.wifi_port)
         try:
