@@ -300,15 +300,15 @@ class BluezChatGui:
             return True
 
     def data_ready(self, sock, condition):
-        address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
-        print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
         datas = sock.recv(1023).split("\t")
         for data in datas:
+            print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
             return self.data_parse(sock, data)
         
 
     def data_parse(self, sock, data):
+        address = self.addresses[sock]
         if len(data) > 0:
             s_data = str(data)
             s_data_arr = s_data.split(",")
