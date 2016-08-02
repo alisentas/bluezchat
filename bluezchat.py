@@ -213,6 +213,12 @@ class BluezChatGui:
         message = self.input_tb.get_text()
         
         data = "%s,%s,%s,%s" % (mtime, host, dest, message)
+
+        length = len(data)
+        data = "%5s,%s" % (length, data)
+
+        print "Sending:[%s]" % data
+
         if len(data) == 0: return
 
         if dest != "":
@@ -302,7 +308,26 @@ class BluezChatGui:
     def data_ready(self, sock, condition):
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
-        data = sock.recv(1023)
+        
+        first_data = sock.recv(5)
+        if len(first_data) == 0:
+            self.add_text("\nlost connection with %s" % address)
+            gobject.source_remove(self.sources[address])
+            del self.sources[address]
+            del self.peers[address]
+            del self.addresses[sock]
+            for row in self.discovered:
+                if row[0] == address:
+                    self.discovered.remove(row.iter)
+                    break
+            sock.close()
+            return True
+
+        dataLen = int(first_data)
+        print "Length: %d" % dataLen
+        print "Getting data"
+        sock.recv(1)
+        data = sock.recv(dataLen)
         print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
         if len(data) > 0:
             s_data = str(data)
@@ -369,18 +394,6 @@ class BluezChatGui:
                                 if sock_type == "wifi":
                                     continue
                             sock.send(data)
-
-        else:
-            self.add_text("\nlost connection with %s" % address)
-            gobject.source_remove(self.sources[address])
-            del self.sources[address]
-            del self.peers[address]
-            del self.addresses[sock]
-            for row in self.discovered:
-                if row[0] == address:
-                    self.discovered.remove(row.iter)
-                    break
-            sock.close()
             
         return True
 
