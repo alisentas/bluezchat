@@ -311,15 +311,17 @@ class BluezChatGui:
             if not s_data_arr[0].isdigit():
                 self.hosts[address] = s_data_arr[0]
                 self.discovered.append ((address, s_data_arr[0]))
-
+                rowc = 0
                 rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                 for row in rows:
+                    rowc += 1
                     sock.send(self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
-                conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                conn.commit()
-                print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                if rowc > 0:
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                    conn.commit()
+                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
                 
                 print self.hosts
                 if s_data_arr[1] == "1":
