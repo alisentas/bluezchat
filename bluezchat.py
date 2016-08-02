@@ -309,6 +309,7 @@ class BluezChatGui:
 
     def data_parse(self, sock, data):
         address = self.addresses[sock]
+        incoming_type = self.get_socket_type(sock)
         if len(data) > 0:
             s_data = str(data)
             s_data_arr = s_data.split(",")
