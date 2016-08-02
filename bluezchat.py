@@ -282,8 +282,6 @@ class BluezChatGui:
         sock, info = self.server_sock.accept()
         address, psm = info
 
-        self.add_text("\n%s has joined." % str(address))
-
         # add new connection to list of peers
         self.peers[address] = sock
         self.addresses[sock] = address
@@ -297,8 +295,6 @@ class BluezChatGui:
 
         address = addr[0]
         if not address in self.addresses:
-            self.add_text("\n%s has joined." % str(addr[0]))
-
             # add new connection to list of peers
             self.peers[address] = sock
             self.addresses[sock] = address
@@ -332,7 +328,10 @@ class BluezChatGui:
                 else:
                     self.hosts[name][1] = address
 
-                print "HOSTS:\n[%s]" % self.hosts
+                if self.cleanup() == True:
+                    return True
+
+                self.add_text("\n%s (%s) has joined." % (name, incoming_type))
 
                 self.discovered.append ((address, name))
                 rowc = 0
@@ -346,10 +345,10 @@ class BluezChatGui:
                     conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
-                
-                print self.hosts
+
                 if s_data_arr[1] == "1":
                     sock.send(self.hostname + ",2\t")
+
                 return True
 
             mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))
@@ -428,7 +427,22 @@ class BluezChatGui:
             return "bluetooth"
 
     def cleanup(self):
-        self.hci_sock.close()
+        for host in self.hosts.keys():
+            if self.hosts[host][0] != 0 and self.hosts[host][1] != 0:
+                sock = self.peers[self.hosts[host][1]]
+                address = self.hosts[host][1]
+                gobject.source_remove(self.sources[address])
+                del self.sources[address]
+                del self.peers[address]
+                del self.addresses[sock]
+                for row in self.discovered:
+                    if row[0] == address:
+                        self.discovered.remove(row.iter)
+                        break
+                print "%s has dropped because you are already connected via wifi" % host
+                sock.close()
+                return True
+
 
     def connect(self, addr, name):
         sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
