@@ -350,7 +350,7 @@ class BluezChatGui:
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
                 
                 print self.hosts
-                if s_data_arr[2] == "1":
+                if s_data_arr[1] == "1":
                     sock.send("%5s,%s,2" % (len(self.hostname),self.hostname))
                 return True
 
