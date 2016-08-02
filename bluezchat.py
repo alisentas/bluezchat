@@ -322,12 +322,14 @@ class BluezChatGui:
 
             if not s_data_arr[0].isdigit():
                 name = s_data_arr[0]
-                if name not in self.hosts:
+                if name not in self.hosts.keys():
                     self.hosts[name] = [0, 0]
                 if incoming_type == "wifi":
                     self.hosts[name][0] = address
                 else:
                     self.hosts[name][1] = address
+
+                print "HOSTS:\n[%s]" % self.hosts
 
                 self.discovered.append ((address, name))
                 rowc = 0
@@ -379,6 +381,8 @@ class BluezChatGui:
 
                 self.messages.append(s_data)
                 for hostKey in self.hosts.keys():
+                    if hostKey == host:
+                        continue
                     if self.hosts[hostKey][0] != 0:
                         sock = self.peers[self.hosts[hostKey][0]]
                         sock.send(s_data + "\t")
@@ -388,6 +392,8 @@ class BluezChatGui:
             else:
                 self.messages.append(s_data)
                 for hostKey in self.hosts.keys():
+                    if hostKey == host:
+                        continue
                     if self.hosts[hostKey][0] != 0:
                         sock = self.peers[self.hosts[hostKey][0]]
                         sock.send(s_data + "\t")
@@ -435,7 +441,6 @@ class BluezChatGui:
             return
 
         self.peers[addr] = sock
-        self.hosts[addr] = name
         source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
         self.sources[addr] = source
         self.addresses[sock] = addr
