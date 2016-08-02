@@ -220,7 +220,7 @@ class BluezChatGui:
                     keys = self.hosts.keys()
                     values = self.hosts.values()
                     sock = self.peers[keys[values.index(dest)]]
-                    sock.send(data)
+                    sock.send(data + "\t")
                     "Data sent to that host"
                     return True
             else:
@@ -229,7 +229,7 @@ class BluezChatGui:
                 print "Message queued, also sent to others."
                 for addr, sock in list(self.peers.items()):
                     try:
-                        sock.send(data)
+                        sock.send(data + "\t")
                         print "sent to ", sock
                     except Exception as e:
                         template = "An exception of type {0} occured. Arguments:{1!r}"
@@ -239,7 +239,7 @@ class BluezChatGui:
         else:
             for addr, sock in list(self.peers.items()):
                 try:
-                    sock.send(data)
+                    sock.send(data + "\t")
                     print "sent to ", sock
                 except Exception as e:
                     template = "An exception of type {0} occured. Arguments:{1!r}"
@@ -261,7 +261,7 @@ class BluezChatGui:
 # --- network events
 
     def get_data(self, mtime, host, dest, message):
-        return str(mtime) + "," + host + "," + dest + "," + message
+        return str(mtime) + "," + host + "," + dest + "," + message + "\t"
 
     def get_time(self, datetimeObj):
         now = datetime.datetime.now()
@@ -302,7 +302,12 @@ class BluezChatGui:
     def data_ready(self, sock, condition):
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
-        data = sock.recv(1023)
+        datas = sock.recv(1023).split("\t")
+        for data in datas:
+            return self.data_parse(sock, data)
+        
+
+    def data_parse(self, sock, data):
         print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
         if len(data) > 0:
             s_data = str(data)
@@ -325,7 +330,7 @@ class BluezChatGui:
                 
                 print self.hosts
                 if s_data_arr[1] == "1":
-                    sock.send(self.hostname + ",2")
+                    sock.send(self.hostname + ",2\t")
                 return True
 
             mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))
@@ -343,7 +348,7 @@ class BluezChatGui:
                     keys = self.hosts.keys()
                     values = self.hosts.values()
                     sock = self.peers[keys[values.index(dest)]]
-                    sock.send(data)
+                    sock.send(data + "\t")
                     "Data sent to that host"
                     return True
                 else:
@@ -358,7 +363,7 @@ class BluezChatGui:
                             if incoming_type == "wifi":
                                 if sock_type == "wifi":
                                     continue
-                            sock.send(data)
+                            sock.send(data + "\t")
             else:
                 if s_data not in self.messages:
                     self.messages.append(s_data)
@@ -368,7 +373,7 @@ class BluezChatGui:
                             if incoming_type == "wifi":
                                 if sock_type == "wifi":
                                     continue
-                            sock.send(data)
+                            sock.send(data + "\t")
 
         else:
             self.add_text("\nlost connection with %s" % address)
@@ -401,7 +406,7 @@ class BluezChatGui:
         sock.settimeout(self.timeout)
         try:
             sock.connect((addr, self.bluetoothPort))
-            sock.send(self.hostname + ",1")
+            sock.send(self.hostname + ",1\t")
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
@@ -447,7 +452,7 @@ class BluezChatGui:
 
         try:
             sock.connect(server_address)
-            sock.send(self.hostname + ",1")
+            sock.send(self.hostname + ",1\t")
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
             
