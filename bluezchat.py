@@ -350,7 +350,7 @@ class BluezChatGui:
                 
                 print self.hosts
                 if s_data_arr[1] == "1":
-                    sock.send(self.hostname + ",2")
+                    sock.send("%5s,%s,2" % (len(self.hostname),self.hostname))
                 return True
 
             mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))
@@ -414,7 +414,7 @@ class BluezChatGui:
         sock.settimeout(self.timeout)
         try:
             sock.connect((addr, self.bluetoothPort))
-            sock.send(self.hostname + ",1")
+            sock.send("%5s,%s,2" % (len(self.hostname),self.hostname))
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
@@ -460,7 +460,7 @@ class BluezChatGui:
 
         try:
             sock.connect(server_address)
-            sock.send(self.hostname + ",1")
+            sock.send("%5s,%s,1" % (len(self.hostname),self.hostname))
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
             
