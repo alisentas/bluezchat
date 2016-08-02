@@ -208,7 +208,7 @@ class BluezChatGui:
     def send_button_clicked(self, widget):
         text =  str(int(time.time()) % 1000) + "," + self.hostname + "," + self.input_tb2.get_text() + "," + self.input_tb.get_text()
         if len(text) == 0: return
-
+        #we can store input_tb2.get_text() before the text = line, may be it can be changed
         if self.input_tb2.get_text() not in self.hosts:
             conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
             conn.commit()
@@ -226,6 +226,7 @@ class BluezChatGui:
         self.input_tb.set_text("")
         s_data_arr = text.split(",")
         message = s_data_arr[3]
+        #we can concanete the whole message here, before printing it. Because it can contain commas
         self.add_text("\n%s: %s" % (self.hostname, message))
 
     
