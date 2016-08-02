@@ -207,7 +207,7 @@ class BluezChatGui:
         print "Done"
 
     def send_button_clicked(self, widget):
-        mhtime = int(time.time())
+        mtime = int(time.time())
         host = self.hostname
         dest = self.input_tb2.get_text()
         message = self.input_tb.get_text()
@@ -231,7 +231,7 @@ class BluezChatGui:
 
         self.input_tb.set_text("")
         #we can concanete the whole message here, before printing it. Because it can contain commas
-        self.add_text("\n%s %s: %s" % (self.get_time(mtime), self.hostname, message))
+        self.add_text("\n%s %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
 
     
 
@@ -293,11 +293,11 @@ class BluezChatGui:
             if not s_data_arr[0].isdigit():
                 self.hosts[address] = s_data_arr[0]
                 self.discovered.append ((address, s_data_arr[0]))
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                for row in rows:
-                    sock.send(self.get_data(row[0], row[1], row[2], row[3], row[4]))
-                    print self.get_data(row[0], row[1], row[2], row[3], row[4])
-                    print "Queued message [%s] sent." % row[4]
+                #rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                #for row in rows:
+                #    sock.send(self.get_data(row[0], row[1], row[2], row[3], row[4]))
+                #    print self.get_data(row[0], row[1], row[2], row[3], row[4])
+                #    print "Queued message [%s] sent." % row[4]
                 print self.hosts
                 if s_data_arr[1] == "1":
                     sock.send(self.hostname + ",2")
