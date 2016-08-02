@@ -257,7 +257,7 @@ class BluezChatGui:
 
         self.input_tb.set_text("")
         #we can concanete the whole message here, before printing it. Because it can contain commas
-        self.add_text("\n%s %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
+        self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
 
     
 
@@ -274,15 +274,15 @@ class BluezChatGui:
     def get_time(self, datetimeObj):
         now = datetime.datetime.now()
         if now.month == datetimeObj.month and now.day == datetimeObj.day and now.year == datetimeObj.year:
-            return "%s:%s" % (datetimeObj.hour, datetimeObj.minute)
+            return "%02s:%02s" % (datetimeObj.hour, datetimeObj.minute)
         else:
-            return "%s %s %s:%s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
+            return "%s %s %02s:%02s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()
         address, psm = info
 
-        self.add_text("\naccepted connection from %s" % str(address))
+        self.add_text("\n%s has joined." % str(address))
 
         # add new connection to list of peers
         self.peers[address] = sock
@@ -297,7 +297,7 @@ class BluezChatGui:
 
         address = addr[0]
         if not address in self.addresses:
-            self.add_text("\naccepted connection from %s" % str(addr[0]))
+            self.add_text("\n%s has joined." % str(addr[0]))
 
             # add new connection to list of peers
             self.peers[address] = sock
@@ -363,7 +363,7 @@ class BluezChatGui:
                 return True
 
             if dest == "" or dest == self.hostname:
-                self.add_text("\n%s %s: %s" % (self.get_time(mtime), host, message))
+                self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
                 if dest == self.hostname:
                     return True
 
@@ -405,7 +405,7 @@ class BluezChatGui:
                         sock.send(s_data + "\t")
 
         else:
-            self.add_text("\nlost connection with %s" % address)
+            self.add_text("\n%s has quit. (ping timeout.)" % address)
             gobject.source_remove(self.sources[address])
             del self.sources[address]
             del self.peers[address]
