@@ -352,7 +352,7 @@ class BluezChatGui:
                     "Data sent to that host"
                     return True
                 else:
-                    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
+                    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                     print "Messaged added to queue"
                     conn.commit()
                 if s_data not in self.messages:
@@ -450,18 +450,21 @@ class BluezChatGui:
 
         server_address = (IP, self.wifi_port)
 
-        try:
-            sock.connect(server_address)
-            sock.send(self.hostname + ",1\t")
-            self.peers[IP] = sock
-            source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
-            
-            self.sources[IP] = source
-            self.addresses[sock] = IP
-        except Exception as e:
-            template = "An exception of type {0} occured. Arguments:{1!r}"
-            mesg = template.format(type(e).__name__, e.args)
-            #print mesg
+        if IP not in self.addresses:
+            try:
+                sock.connect(server_address)
+                sock.send(self.hostname + ",1\t")
+                self.peers[IP] = sock
+                source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
+                
+                self.sources[IP] = source
+                self.addresses[sock] = IP
+            except Exception as e:
+                template = "An exception of type {0} occured. Arguments:{1!r}"
+                mesg = template.format(type(e).__name__, e.args)
+                #print mesg
+        else:
+            print "Already connected to %s" % IP
 
     def discover_bluetooth(self, addr, name):
         try:
