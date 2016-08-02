@@ -329,35 +329,47 @@ class BluezChatGui:
                 return True
 
             mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))
-            name = s_data_arr[1]
+            host = s_data_arr[1]
             dest = s_data_arr[2]
             message = ",".join(s_data_arr[3:])
 
             if dest == "" or dest == self.hostname:
-                self.add_text("\n%s %s: %s" % (self.get_time(mtime), name, message))
+                self.add_text("\n%s %s: %s" % (self.get_time(mtime), host, message))
                 if dest == self.hostname:
                     return True
 
-            if dest in self.hosts:
-                keys = self.hosts.keys()
-                values = self.hosts.values()
-                sock = self.peers[keys[values.index(dest)]]
-                sock.send(data)
-                "Data sent to that host"
-                return True
+            if dest != "":
+                if dest in self.hosts:
+                    keys = self.hosts.keys()
+                    values = self.hosts.values()
+                    sock = self.peers[keys[values.index(dest)]]
+                    sock.send(data)
+                    "Data sent to that host"
+                    return True
+                else:
+                    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
+                    print "Messaged added to queue"
+                    conn.commit()
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                    for addr, sock in list(self.peers.items()):
+                        if addr != address:
+                            sock_type = self.get_socket_type(sock)
+                            if incoming_type == "wifi":
+                                if sock_type == "wifi":
+                                    continue
+                            sock.send(data)
             else:
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
-                print "Messaged added to queue"
-                conn.commit()
-            if s_data not in self.messages:
-                self.messages.append(s_data)
-                for addr, sock in list(self.peers.items()):
-                    if addr != address:
-                        sock_type = self.get_socket_type(sock)
-                        if incoming_type == "wifi":
-                            if sock_type == "wifi":
-                                continue
-                        sock.send(data)
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                    for addr, sock in list(self.peers.items()):
+                        if addr != address:
+                            sock_type = self.get_socket_type(sock)
+                            if incoming_type == "wifi":
+                                if sock_type == "wifi":
+                                    continue
+                            sock.send(data)
+
         else:
             self.add_text("\nlost connection with %s" % address)
             gobject.source_remove(self.sources[address])
