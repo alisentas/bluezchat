@@ -214,20 +214,38 @@ class BluezChatGui:
         
         data = "%s,%s,%s,%s" % (mtime, host, dest, message)
         if len(data) == 0: return
-        #we can store input_tb2.get_text() before the text = line, may be it can be changed
-        #if self.input_tb2.get_text() not in self.hosts:
-        #    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
-        #    conn.commit()
 
-        for addr, sock in list(self.peers.items()):
-            try:
-                sock.send(data)
-                print "sent to ", sock
-            except Exception as e:
-                template = "An exception of type {0} occured. Arguments:{1!r}"
-                mesg = template.format(type(e).__name__, e.args)
-                print mesg
-                continue
+        if dest != "":
+            if dest in self.hosts:
+                    keys = self.hosts.keys()
+                    values = self.hosts.values()
+                    sock = self.peers[keys[values.index(dest)]]
+                    sock.send(data)
+                    "Data sent to that host"
+                    return True
+            else:
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
+                conn.commit()
+                print "Message queued, also sent to others."
+                for addr, sock in list(self.peers.items()):
+                    try:
+                        sock.send(data)
+                        print "sent to ", sock
+                    except Exception as e:
+                        template = "An exception of type {0} occured. Arguments:{1!r}"
+                        mesg = template.format(type(e).__name__, e.args)
+                        print mesg
+                        continue
+        else:
+            for addr, sock in list(self.peers.items()):
+                try:
+                    sock.send(data)
+                    print "sent to ", sock
+                except Exception as e:
+                    template = "An exception of type {0} occured. Arguments:{1!r}"
+                    mesg = template.format(type(e).__name__, e.args)
+                    print mesg
+                    continue
 
         self.input_tb.set_text("")
         #we can concanete the whole message here, before printing it. Because it can contain commas
@@ -242,8 +260,8 @@ class BluezChatGui:
 
 # --- network events
 
-    def get_data(self, mhash, host, dest, mtime, message):
-        return str(mhash) + "," + host + "," + dest + "," + mtime + "," + message
+    def get_data(self, mtime, host, dest, message):
+        return str(mtime) + "," + host + "," + dest + "," + message
 
     def get_time(self, datetimeObj):
         now = datetime.datetime.now()
@@ -293,11 +311,16 @@ class BluezChatGui:
             if not s_data_arr[0].isdigit():
                 self.hosts[address] = s_data_arr[0]
                 self.discovered.append ((address, s_data_arr[0]))
-                #rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                #for row in rows:
-                #    sock.send(self.get_data(row[0], row[1], row[2], row[3], row[4]))
-                #    print self.get_data(row[0], row[1], row[2], row[3], row[4])
-                #    print "Queued message [%s] sent." % row[4]
+
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                for row in rows:
+                    sock.send(self.get_data(row[0], row[1], row[2], row[3]))
+                    print self.get_data(row[0], row[1], row[2], row[3])
+                    print "Queued message [%s] sent." % row[3]
+                conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                conn.commit()
+                print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                
                 print self.hosts
                 if s_data_arr[1] == "1":
                     sock.send(self.hostname + ",2")
@@ -321,7 +344,7 @@ class BluezChatGui:
                 "Data sent to that host"
                 return True
             else:
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", mhash, host, dest, mtime, message)
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
             if s_data not in self.messages:
