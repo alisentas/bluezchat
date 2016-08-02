@@ -186,6 +186,9 @@ class BluezChatGui:
         if self.bluetooth:
             for addr, name in bluetooth.discover_devices (lookup_names = True):
                 print "(%s, %s)" % (addr, name)
+                if addr in self.addresses.values():
+                    print "Already connected to %s" % addr
+                    continue
                 try:
                     t = threading.Thread(target=self.discover_bluetooth, args=(addr, name,))
                     # Sticks the thread in a list so that it remains accessible
@@ -312,13 +315,21 @@ class BluezChatGui:
     def data_parse(self, sock, data):
         address = self.addresses[sock]
         incoming_type = self.get_socket_type(sock)
+        
         if len(data) > 0:
             s_data = str(data)
             s_data_arr = s_data.split(",")
 
             if not s_data_arr[0].isdigit():
-                self.hosts[address] = s_data_arr[0]
-                self.discovered.append ((address, s_data_arr[0]))
+                name = s_data_arr[0]
+                if name not in self.hosts:
+                    self.hosts[name] = [0, 0]
+                if incoming_type == "wifi":
+                    self.hosts[name][0] = address
+                else:
+                    self.hosts[name][1] = address
+
+                self.discovered.append ((address, name))
                 rowc = 0
                 rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                 for row in rows:
@@ -341,42 +352,48 @@ class BluezChatGui:
             dest = s_data_arr[2]
             message = ",".join(s_data_arr[3:])
 
+            if s_data not in self.messages:
+                self.messages.append(s_data)
+            else:
+                return True
+
             if dest == "" or dest == self.hostname:
                 self.add_text("\n%s %s: %s" % (self.get_time(mtime), host, message))
                 if dest == self.hostname:
                     return True
 
             if dest != "":
-                if dest in self.hosts:
-                    keys = self.hosts.keys()
-                    values = self.hosts.values()
-                    sock = self.peers[keys[values.index(dest)]]
-                    sock.send(data + "\t")
-                    "Data sent to that host"
+                if dest in self.hosts.keys():
+                    if self.hosts[dest][0] != 0 and incoming_type != "wifi":
+                        sock = self.peers[self.host[dest][0]]
+                        sock.send(data + "\t")
+                    else:
+                        sock = self.peers[self.host[dest][1]]
+                        sock.send(data + "\t")
+                    print "Data sent to that host"
                     return True
                 else:
                     conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                     print "Messaged added to queue"
                     conn.commit()
-                if s_data not in self.messages:
-                    self.messages.append(s_data)
-                    for addr, sock in list(self.peers.items()):
-                        if addr != address:
-                            sock_type = self.get_socket_type(sock)
-                            if incoming_type == "wifi":
-                                if sock_type == "wifi":
-                                    continue
-                            sock.send(data + "\t")
+
+                self.messages.append(s_data)
+                for hostKey in self.hosts.keys():
+                    if self.hosts[hostKey][0] != 0:
+                        sock = self.peers[self.hosts[hostKey][0]]
+                        sock.send(s_data + "\t")
+                    else:
+                        sock = self.peers[self.hosts[hostKey][1]]
+                        sock.send(s_data + "\t")
             else:
-                if s_data not in self.messages:
-                    self.messages.append(s_data)
-                    for addr, sock in list(self.peers.items()):
-                        if addr != address:
-                            sock_type = self.get_socket_type(sock)
-                            if incoming_type == "wifi":
-                                if sock_type == "wifi":
-                                    continue
-                            sock.send(data + "\t")
+                self.messages.append(s_data)
+                for hostKey in self.hosts.keys():
+                    if self.hosts[hostKey][0] != 0:
+                        sock = self.peers[self.hosts[hostKey][0]]
+                        sock.send(s_data + "\t")
+                    else:
+                        sock = self.peers[self.hosts[hostKey][1]]
+                        sock.send(s_data + "\t")
 
         else:
             self.add_text("\nlost connection with %s" % address)
@@ -418,7 +435,7 @@ class BluezChatGui:
             return
 
         self.peers[addr] = sock
-        self.hosts[sock] = name
+        self.hosts[addr] = name
         source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
         self.sources[addr] = source
         self.addresses[sock] = addr
