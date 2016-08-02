@@ -340,7 +340,8 @@ class BluezChatGui:
                 rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                 for row in rows:
                     rowc += 1
-                    sock.send(self.get_data(row[0], row[1], row[2], row[3]))
+                    data_to_send = self.get_data(row[0], row[1], row[2], row[3])
+                    sock.send("%5s,%s" % (len(data_to_send), data_to_send))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
@@ -349,7 +350,7 @@ class BluezChatGui:
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
                 
                 print self.hosts
-                if s_data_arr[1] == "1":
+                if s_data_arr[2] == "1":
                     sock.send("%5s,%s,2" % (len(self.hostname),self.hostname))
                 return True
 
