@@ -207,18 +207,17 @@ class BluezChatGui:
         print "Done"
 
     def send_button_clicked(self, widget):
-        mhash = int(time.time()) % 1000
+        mhtime = int(time.time())
         host = self.hostname
         dest = self.input_tb2.get_text()
-        mtime = datetime.datetime.now()
         message = self.input_tb.get_text()
         
-        data = "%s,%s,%s,%s,%s" % (mhash, host, dest, mtime, message)
+        data = "%s,%s,%s,%s" % (mtime, host, dest, message)
         if len(data) == 0: return
         #we can store input_tb2.get_text() before the text = line, may be it can be changed
-        if self.input_tb2.get_text() not in self.hosts:
-            conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
-            conn.commit()
+        #if self.input_tb2.get_text() not in self.hosts:
+        #    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?, ?)", (str(int(time.time()) % 1000), self.hostname, self.input_tb2.get_text(), datetime.datetime.now(), self.input_tb.get_text()))
+        #    conn.commit()
 
         for addr, sock in list(self.peers.items()):
             try:
@@ -304,11 +303,10 @@ class BluezChatGui:
                     sock.send(self.hostname + ",2")
                 return True
 
-            mhash = s_data_arr[0]
+            mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))
             name = s_data_arr[1]
             dest = s_data_arr[2]
-            mtime = datetime.datetime.strptime(s_data_arr[3], '%b %d %Y %I:%M%p')
-            message = ",".join(s_data_arr[4:])
+            message = ",".join(s_data_arr[3:])
 
             if dest == "" or dest == self.hostname:
                 self.add_text("\n%s %s: %s" % (self.get_time(mtime), name, message))
