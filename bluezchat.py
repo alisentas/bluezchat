@@ -221,36 +221,40 @@ class BluezChatGui:
         if len(data) == 0: return
 
         if dest != "":
-            if dest in self.hosts:
-                    keys = self.hosts.keys()
-                    values = self.hosts.values()
-                    sock = self.peers[keys[values.index(dest)]]
+            if dest in self.hosts.keys():
+                if self.hosts[dest][0] != 0:
+                    sock = self.peers[self.host[dest][0]]
                     sock.send(data + "\t")
-                    "Data sent to that host"
-                    return True
+                else:
+                    sock = self.peers[self.host[dest][1]]
+                    sock.send(data + "\t")
+                print "Data sent to that host"
+                return True
             else:
                 conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
                 conn.commit()
                 print "Message queued, also sent to others."
-                for addr, sock in list(self.peers.items()):
-                    try:
-                        sock.send(data + "\t")
-                        print "sent to ", sock
-                    except Exception as e:
-                        template = "An exception of type {0} occured. Arguments:{1!r}"
-                        mesg = template.format(type(e).__name__, e.args)
-                        print mesg
+                self.messages.append(s_data)
+                for hostKey in self.hosts.keys():
+                    if hostKey == host:
                         continue
+                    if self.hosts[hostKey][0] != 0:
+                        sock = self.peers[self.hosts[hostKey][0]]
+                        sock.send(s_data + "\t")
+                    else:
+                        sock = self.peers[self.hosts[hostKey][1]]
+                        sock.send(s_data + "\t")
         else:
-            for addr, sock in list(self.peers.items()):
-                try:
-                    sock.send(data + "\t")
-                    print "sent to ", sock
-                except Exception as e:
-                    template = "An exception of type {0} occured. Arguments:{1!r}"
-                    mesg = template.format(type(e).__name__, e.args)
-                    print mesg
+            self.messages.append(s_data)
+            for hostKey in self.hosts.keys():
+                if hostKey == host:
                     continue
+                if self.hosts[hostKey][0] != 0:
+                    sock = self.peers[self.hosts[hostKey][0]]
+                    sock.send(s_data + "\t")
+                else:
+                    sock = self.peers[self.hosts[hostKey][1]]
+                    sock.send(s_data + "\t")
 
         self.input_tb.set_text("")
         #we can concanete the whole message here, before printing it. Because it can contain commas
