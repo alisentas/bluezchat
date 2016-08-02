@@ -238,7 +238,7 @@ class BluezChatGui:
 # --- network events
 
     def get_data(self, mhash, host, dest, mtime, message):
-        return mhash + "," + host + "," + dest + "," + mtime + "," + message
+        return str(mhash) + "," + host + "," + dest + "," + mtime + "," + message
 
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()
@@ -281,9 +281,10 @@ class BluezChatGui:
             if not s_data_arr[0].isdigit():
                 self.hosts[address] = s_data_arr[0]
                 self.discovered.append ((address, s_data_arr[0]))
-                rows = conn.execute("SELECT * FROM messages WHERE dest=" + s_data_arr[0])
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                 for row in rows:
                     sock.send(self.get_data(row[0], row[1], row[2], row[3], row[4]))
+                    print self.get_data(row[0], row[1], row[2], row[3], row[4])
                     print "Queued message [%s] sent." % row[4]
                 print self.hosts
                 if s_data_arr[1] == "1":
@@ -294,7 +295,7 @@ class BluezChatGui:
             name = s_data_arr[1]
             dest = s_data_arr[2]
             mtime = s_data_arr[3]
-            message = s_data_arr[4:]
+            message = ",".join(s_data_arr[4:])
 
             if dest == "" or dest == self.hostname:
                 self.add_text("\n%s: %s" % (name, message))
