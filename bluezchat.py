@@ -261,7 +261,6 @@ class BluezChatGui:
         # clear the message input
         self.input_tb.set_text("")
         # print the message in our own program as our own
-        self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
 
     # fires when user clicks on any name in the connections list
     def devices_tv_cursor_changed(self, widget):
@@ -326,18 +325,19 @@ class BluezChatGui:
                 continue
             if self.hosts[hostKey][0] != 0:
                 sock = self.peers[self.hosts[hostKey][0]]
-                sock.send(self.get_data(mtime, self.hostname, dest, message) + "\t")
+                sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
             else:
                 sock = self.peers[self.hosts[hostKey][1]]
-                sock.send(self.get_data(mtime, self.hostname, dest, message) + "\t")
+                sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
 
     def send(self, dest, message):
         mtime = int(time.time())            # current timestamp, it is float make it integer
         host = self.hostname                # our hostname
 
         # create data
-        data = "%s,%s,%s,%s" % (mtime, host, dest, message)
+        data = "4,%s,%s,%s,%s" % (mtime, host, dest, message)
         self.messages.append(data)
+        self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
 
         if dest != "":
             if dest in self.hosts.keys():
