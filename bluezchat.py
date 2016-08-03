@@ -274,7 +274,7 @@ class BluezChatGui:
                 if len(entry) != 2:
                     self.add_text("\nWhat?.")
                 else:
-                    self.send_all(6, host = entry[1], key = self.publicKey.save_pkcs1())
+                    self.send_all(6, host = self.hostname, dest = entry[1], key = self.publicKey.save_pkcs1())
                 return True
             elif entry[0] == "/help":
                 self.add_text("COMMANDS: /help, /block <user>")
@@ -367,10 +367,10 @@ class BluezChatGui:
             for hostKey in self.hosts.keys():
                 if self.hosts[hostKey][0] != 0:
                     sock = self.peers[self.hosts[hostKey][0]]
-                    sock.send(str(protocol) + "," + host + "," + key + "\t")
+                    sock.send(str(protocol) + "," + host + "," + dest + "," + key + "\t")
                 else:
                     sock = self.peers[self.hosts[hostKey][1]]
-                    sock.send(str(protocol) + "," + host + "," + key + "\t")
+                    sock.send(str(protocol) + "," + host + "," +  dest + "," + key + "\t")
 
     def send(self, dest, message):
         mtime = int(time.time())            # current timestamp, it is float make it integer
