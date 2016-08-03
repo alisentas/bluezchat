@@ -574,10 +574,10 @@ class BluezChatGui:
                     if host in self.hosts.keys():
                         if self.hosts[host][0] != 0:
                             sock = self.peers[self.hosts[host][0]]
-                            sock.send("7," + self.hostname + host +  data + "\t")
+                            sock.send("7," + self.hostname + "," + host +  data + "\t")
                         else:
                             sock = self.peers[self.hosts[host][1]]
-                            sock.send("7," + self.hostname + host + data + "\t")
+                            sock.send("7," + self.hostname + "," + host + data + "\t")
                         print "Data sent to that host"
                         return True
                     else:
