@@ -320,7 +320,7 @@ class BluezChatGui:
         else:
             return "%s %s %02s:%02s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
-    def add_connection(self, hostname, conn_type)
+    def add_connection(self, hostname, conn_type):
         for row in self.discovered:
             if row[1] == hostname:
                 return
@@ -581,7 +581,7 @@ class BluezChatGui:
         sock.settimeout(self.timeout)
         try:
             sock.connect((addr, self.bluetoothPort))
-            sock.send(self.hostname + ",1\t")
+            sock.send("1,%s\t" % self.hostname)
         except Exception as e:
             template = "An exception of type {0} occured. Arguments:{1!r}"
             mesg = template.format(type(e).__name__, e.args)
@@ -627,7 +627,7 @@ class BluezChatGui:
         server_address = (IP, self.wifi_port)
         try:
             sock.connect(server_address)
-            sock.send(self.hostname + ",1\t")
+            sock.send("1,%s\t" % self.hostname)
             self.peers[IP] = sock
             source = gobject.io_add_watch (sock, gobject.IO_IN, self.data_ready)
             
