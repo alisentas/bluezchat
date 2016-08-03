@@ -331,7 +331,7 @@ class BluezChatGui:
                 sock = self.peers[self.hosts[hostKey][1]]
                 sock.send(self.get_data(mtime, self.hostname, dest, message) + "\t")
 
-    def send(dest, message):
+    def send(self, dest, message):
         mtime = int(time.time())            # current timestamp, it is float make it integer
         host = self.hostname                # our hostname
 
