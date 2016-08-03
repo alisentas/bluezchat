@@ -332,13 +332,13 @@ class BluezChatGui:
         # databases, they use more then one sock.send methods but we read them all at the same time
         datas = sock.recv(1023).split("\t")
         print "Raw data:[%s]" % "\t".join(datas)
+        
         for data in datas:
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
             # parse the incoming data
             self.data_parse(sock, data)
-
-        return True
         
+        return True
 
     def data_parse(self, sock, data):
         address = self.addresses[sock]              # incoming socket address
@@ -437,7 +437,6 @@ class BluezChatGui:
                         else:
                             sock = self.peers[self.hosts[hostKey][1]]
                             sock.send(s_data + "\t")
-                    return True
             else:
                 # if message is meant to send to anyone, we printed it above, now it's time to send it
                 for hostKey in self.hosts.keys():
@@ -449,7 +448,6 @@ class BluezChatGui:
                     else:
                         sock = self.peers[self.hosts[hostKey][1]]
                         sock.send(s_data + "\t")
-                return True
 
         else:
             # if data length is zero, drop the connection
