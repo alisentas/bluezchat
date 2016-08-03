@@ -283,7 +283,7 @@ class BluezChatGui:
             return "%s %s %02s:%02s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
     def add_connection(self, hostname, conn_type):
-        if hostname == self.hostname:
+        if hostname == self.hostname or hostname == "":
             return
         for row in self.discovered:
             if row[1] == hostname:
@@ -319,7 +319,7 @@ class BluezChatGui:
             self.sources[address] = source
             return True
 
-    def send_all(self, mtime, dest, message):
+    def send_all(self, mtime, host, dest, message):
         for hostKey in self.hosts.keys():
             if hostKey == host:
                 continue
@@ -353,10 +353,10 @@ class BluezChatGui:
                 conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
-                self.send_all(mtime, dest, message)
+                self.send_all(mtime, host, dest, message)
                 return True
         else:
-            self.send_all(mtime, dest, message)
+            self.send_all(mtime, host, dest, message)
 
     # fires when data is ready
     def data_ready(self, sock, condition):
@@ -484,12 +484,12 @@ class BluezChatGui:
                         conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                         print "Messaged added to queue"
                         conn.commit()
-                        self.send_all(mtime, dest, message)
+                        self.send_all(mtime, host, dest, message)
                         return True
                 else:
                     if host not in self.blocked:
                         self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                    self.send_all(mtime, dest, message)
+                    self.send_all(mtime, host, dest, message)
                     return True
             elif identifier == 5:
                 for hostname in s_data_arr[1:]:
