@@ -382,7 +382,7 @@ class BluezChatGui:
                     sock.send(self.hostname + ",2\t")
 
                 # self.discovered is not an array, append function adds people to the connections list in the GUI
-                self.discovered.append ((address, name))
+                self.discovered.append (("", name))
                 
                 # following lines gets the messages we have in our database for that host, and sends it to them
                 rowc = 0
