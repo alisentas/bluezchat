@@ -366,21 +366,24 @@ class BluezChatGui:
                 self.discovered.append ((address, name))
                 
                 # following lines gets the messages we have in our database for that host, and sends it to them
-                rowc = 0
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                for row in rows:
-                    rowc += 1
-                    sock.send(self.get_data(row[0], row[1], row[2], row[3]))
-                    print self.get_data(row[0], row[1], row[2], row[3])
-                    print "Queued message [%s] sent." % row[3]
-                if rowc > 0:
-                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                    conn.commit()
-                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                if s_data_arr[1] == "3":
+                    rowc = 0
+                    rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                    for row in rows:
+                        rowc += 1
+                        sock.send(self.get_data(row[0], row[1], row[2], row[3]))
+                        print self.get_data(row[0], row[1], row[2], row[3])
+                        print "Queued message [%s] sent." % row[3]
+                    if rowc > 0:
+                        conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                        conn.commit()
+                        print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
                 # incoming data was in the form of host,1 or host,2
                 # host,1 means its discovery request, we send our hostname,2 to this kind of messages
                 if s_data_arr[1] == "1":
+                    sock.send(self.hostname + ",2\t")
+                elif s_data_arr[1] == "2":
                     sock.send(self.hostname + ",2\t")
 
                 return True     # all is well
