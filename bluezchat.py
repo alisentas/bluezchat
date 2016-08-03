@@ -461,6 +461,9 @@ class BluezChatGui:
             # if data length is zero, drop the connection
             self.add_text("\n%s has quit. (ping timeout.)" % address)
             gobject.source_remove(self.sources[address])
+            for host in self.hosts.keys():
+                if self.hosts[host][0] == self.addresses[sock] or self.hosts[host][1] == self.addresses[sock]:
+                    del self.hosts[host]
             del self.sources[address]
             del self.peers[address]
             del self.addresses[sock]
