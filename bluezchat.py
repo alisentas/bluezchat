@@ -370,6 +370,11 @@ class BluezChatGui:
                 # print IRC style connection messages
                 self.add_text("\n%s (%s) has joined." % (name, incoming_type))
 
+                # incoming data was in the form of host,1 or host,2
+                # host,1 means its discovery request, we send our hostname,2 to this kind of messages
+                if s_data_arr[1] == "1":
+                    sock.send(self.hostname + ",2\t")
+
                 # self.discovered is not an array, append function adds people to the connections list in the GUI
                 self.discovered.append ((address, name))
                 
@@ -385,11 +390,6 @@ class BluezChatGui:
                     conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
-
-                # incoming data was in the form of host,1 or host,2
-                # host,1 means its discovery request, we send our hostname,2 to this kind of messages
-                if s_data_arr[1] == "1":
-                    sock.send(self.hostname + ",2\t")
 
                 return True     # all is well
 
