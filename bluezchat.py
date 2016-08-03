@@ -387,7 +387,7 @@ class BluezChatGui:
 
         if dest != "":
             if dest in self.keys.keys():
-                message = self.encrypt(message, self.keys[host])
+                message = self.encrypt(message, self.keys[dest])
             if dest in self.hosts.keys():
                 if self.hosts[dest][0] != 0 and incoming_type != "wifi":
                     sock = self.peers[self.hosts[dest][0]]
@@ -563,10 +563,6 @@ class BluezChatGui:
                     self.add_connection(hostname, "remote")
                 return True
             elif identifier == 6:
-                if s_data not in self.messages:
-                    self.messages.append(s_data)
-                else:
-                    return True
                 remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[2])
                 host = s_data_arr[1]
                 key = str(random.randrange(1000000, 9999999))
