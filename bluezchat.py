@@ -331,14 +331,11 @@ class BluezChatGui:
         # we also split the data using \t because when a connection occurs, hosts send us messages from their
         # databases, they use more then one sock.send methods but we read them all at the same time
         datas = sock.recv(1023).split("\t")
-        print "Raw data:[%s]" % "\t".join(datas)
-        
         for data in datas:
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
             # parse the incoming data
-            self.data_parse(sock, data)
+            return self.data_parse(sock, data)
         
-        return True
 
     def data_parse(self, sock, data):
         address = self.addresses[sock]              # incoming socket address
@@ -369,25 +366,22 @@ class BluezChatGui:
                 self.discovered.append ((address, name))
                 
                 # following lines gets the messages we have in our database for that host, and sends it to them
-                if s_data_arr[1] == "3":
-                    rowc = 0
-                    rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                    for row in rows:
-                        rowc += 1
-                        sock.send(self.get_data(row[0], row[1], row[2], row[3]))
-                        print self.get_data(row[0], row[1], row[2], row[3])
-                        print "Queued message [%s] sent." % row[3]
-                    if rowc > 0:
-                        conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
-                        conn.commit()
-                        print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                rowc = 0
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                for row in rows:
+                    rowc += 1
+                    sock.send(self.get_data(row[0], row[1], row[2], row[3]))
+                    print self.get_data(row[0], row[1], row[2], row[3])
+                    print "Queued message [%s] sent." % row[3]
+                if rowc > 0:
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                    conn.commit()
+                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
                 # incoming data was in the form of host,1 or host,2
                 # host,1 means its discovery request, we send our hostname,2 to this kind of messages
                 if s_data_arr[1] == "1":
                     sock.send(self.hostname + ",2\t")
-                elif s_data_arr[1] == "2":
-                    sock.send(self.hostname + ",3\t")
 
                 return True     # all is well
 
