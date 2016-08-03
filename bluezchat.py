@@ -331,10 +331,17 @@ class BluezChatGui:
         # we also split the data using \t because when a connection occurs, hosts send us messages from their
         # databases, they use more then one sock.send methods but we read them all at the same time
         datas = sock.recv(1023).split("\t")
-        for data in datas:
+        if len(datas) > 1:
+            for data in datas[:-1]:
+                print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
+                # parse the incoming data
+                self.data_parse(sock, data)
+        else:
+            data = datas[0]
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
-            # parse the incoming data
+                # parse the incoming data
             self.data_parse(sock, data)
+
         
         return True
 
