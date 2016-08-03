@@ -375,6 +375,7 @@ class BluezChatGui:
     def send(self, dest, message):
         mtime = int(time.time())            # current timestamp, it is float make it integer
         host = self.hostname                # our hostname
+        original = message
 
         if dest in self.keys.keys():
             message = self.encrypt(message, self.keys[dest])
@@ -382,7 +383,7 @@ class BluezChatGui:
         # create data
         data = "4,%s,%s,%s,%s" % (mtime, host, dest, message)
         self.messages.append(data)
-        self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
+        self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, original))
 
         if dest != "":
             if dest in self.hosts.keys():
@@ -531,7 +532,7 @@ class BluezChatGui:
                 if dest != "":
                     if dest == self.hostname:
                         if host not in self.blocked:
-                            if dest in self.keys.keys():
+                            if host in self.keys.keys():
                                 message = self.decrypt(message, self.keys[dest])
                             self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
                             return True
