@@ -416,7 +416,6 @@ class BluezChatGui:
                     print "Messaged added to queue"
                     conn.commit()
 
-                self.messages.append(s_data)
                 # also send it to everyone
                 for hostKey in self.hosts.keys():
                     if hostKey == host:
@@ -429,7 +428,6 @@ class BluezChatGui:
                         sock.send(s_data + "\t")
             else:
                 # if message is meant to send to anyone, we printed it above, now it's time to send it
-                self.messages.append(s_data)
                 for hostKey in self.hosts.keys():
                     if hostKey == host:
                         continue
@@ -507,11 +505,12 @@ class BluezChatGui:
 
     # starts all listening sockets
     def start_server(self):
-        self.server_sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
-        self.server_sock.bind(("",self.bluetoothPort))
-        self.server_sock.listen(1)
+        if self.bluetooth:
+            self.server_sock = bluetooth.BluetoothSocket (self.bluetoothConnType)
+            self.server_sock.bind(("",self.bluetoothPort))
+            self.server_sock.listen(1)
 
-        gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
+            gobject.io_add_watch(self.server_sock, gobject.IO_IN, self.incoming_connection)
 
         if self.wifi:
             self.server_sock_wifi = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
