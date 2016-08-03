@@ -432,7 +432,7 @@ class BluezChatGui:
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
-                self.add_connection(name, "direct")
+                self.add_connection(s_data_arr[1], "direct")
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
 
                 return True     # all is well
@@ -450,7 +450,7 @@ class BluezChatGui:
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
-                self.add_connection(name, "direct")
+                self.add_connection(s_data_arr[1], "direct")
 
                 return True     # all is well
             elif identifier == 4:
