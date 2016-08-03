@@ -434,7 +434,7 @@ class BluezChatGui:
         return True
 
     def data_parse(self, sock, data):
-        #address = self.addresses[sock]              # incoming socket address
+        address = self.addresses[sock]              # incoming socket address
         incoming_type = self.get_socket_type(sock)  # again, we check the incoming type here too
         
         # if data length is greater than zero then process it, if not drop the connection
