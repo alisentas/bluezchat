@@ -566,11 +566,15 @@ class BluezChatGui:
                     return True
                 host = s_data_arr[1]
                 dest = s_data_arr[2]
+                print "host: %s, dest: %s" % (host, dest)
                 if dest == self.hostname:
                     remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[3])
                     key = str(random.randrange(1000000, 9999999))
                     data = base64.b64encode(rsa.encrypt(key, remoteKey))
                     self.keys[host] = key
+                    print "Key: %s" % key
+                    print "Keys: %s" % self.keys
+                    print "Host: %s, self.hosts: %s" % (hosts, keys)
                     if host in self.hosts.keys():
                         if self.hosts[host][0] != 0:
                             sock = self.peers[self.hosts[host][0]]
@@ -585,6 +589,7 @@ class BluezChatGui:
                     return True
                 else:
                     self.send_all(6, host=host, dest=dest, key = data)
+                    return True
             elif identifier == 7:
                 if s_data not in self.messages:
                     self.messages.append(s_data)
