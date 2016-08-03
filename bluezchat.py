@@ -353,10 +353,10 @@ class BluezChatGui:
                 conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
-                self.sendall(mtime, dest, message)
+                self.send_all(mtime, dest, message)
                 return True
         else:
-            self.sendall(mtime, dest, message)
+            self.send_all(mtime, dest, message)
 
     # fires when data is ready
     def data_ready(self, sock, condition):
@@ -416,7 +416,6 @@ class BluezChatGui:
                 # print IRC style connection messages
                 self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 sock.send("2,%s\t" % self.hostname)
-                self.add_connection(name, "direct")
                 return True
             elif identifier == 2:
                 sock.send("3,%s\t" % self.hostname)
@@ -433,6 +432,7 @@ class BluezChatGui:
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
+                self.add_connection(name, "direct")
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
 
                 return True     # all is well
@@ -450,6 +450,7 @@ class BluezChatGui:
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
+                self.add_connection(name, "direct")
 
                 return True     # all is well
             elif identifier == 4:
@@ -483,12 +484,12 @@ class BluezChatGui:
                         conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                         print "Messaged added to queue"
                         conn.commit()
-                        self.sendall(mtime, dest, message)
+                        self.send_all(mtime, dest, message)
                         return True
                 else:
                     if host not in self.blocked:
                         self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                    self.sendall(mtime, dest, message)
+                    self.send_all(mtime, dest, message)
                     return True
             elif identifier == 5:
                 for hostname in s_data_arr[1:]:
