@@ -228,6 +228,9 @@ class BluezChatGui:
     # starts when send button is clicked
     def send_button_clicked(self, widget):
         entry = self.input_tb.get_text()
+        if len(entry) == 0:
+            return
+
         if entry[0] == "/":
             # this is a command
             entry = entry.split(" ")
@@ -249,53 +252,12 @@ class BluezChatGui:
             self.add_text("\n%s is not a command. See /help for available commands." % entry[0])
             return False
         # we will send messages in the form: timestamp,our hostname,destination host name,message
-        mtime = int(time.time())            # current timestamp, it is float make it integer
-        host = self.hostname                # our hostname
+
         dest = self.input_tb2.get_text()    # destination is the value of textbox2
         message = entry  # message is the vaue of textbox1
         
-        # create data
-        data = "%s,%s,%s,%s" % (mtime, host, dest, message)
-        if len(data) == 0: return
+        self.send(dest, message)
 
-        if dest != "":  # if destination is not everybody, "" means everybody
-            if dest in self.hosts.keys():                   # if we see the destination
-                if self.hosts[dest][0] != 0:                # if we see him/her via wifi
-                    sock = self.peers[self.hosts[dest][0]]  # get wifi socket
-                    sock.send(data + "\t")                  # send the message using wifi
-                else:
-                    sock = self.peers[self.hosts[dest][1]]  # get bluetooth socket
-                    sock.send(data + "\t")                  # send over bluetooth
-                print "Data sent to that host"
-            else:       # if destination is one person but we cannot see him/her currently
-                # we save the message to our database and send it when we can see the destination
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
-                conn.commit()
-                print "Message queued, also sent to others."
-                
-                # also send the message to nearby devices
-                self.messages.append(data)          # we append it to our list so we cannot process it again when it comes back to us
-                for hostKey in self.hosts.keys():   # for everyhost we see
-                    if hostKey == host:
-                        continue
-                    if self.hosts[hostKey][0] != 0:                 # try to send it over wifi
-                        sock = self.peers[self.hosts[hostKey][0]]
-                        sock.send(data + "\t")
-                    else:
-                        sock = self.peers[self.hosts[hostKey][1]]   # or bluetooth
-                        sock.send(data + "\t")
-        else:
-            # same thing here, if message is sent to everybody, we send it to everybody
-            self.messages.append(data)
-            for hostKey in self.hosts.keys():
-                if hostKey == host:
-                    continue
-                if self.hosts[hostKey][0] != 0:
-                    sock = self.peers[self.hosts[hostKey][0]]
-                    sock.send(data + "\t")
-                else:
-                    sock = self.peers[self.hosts[hostKey][1]]
-                    sock.send(data + "\t")
         # clear the message input
         self.input_tb.set_text("")
         # print the message in our own program as our own
@@ -322,6 +284,8 @@ class BluezChatGui:
             return "%s %s %02s:%02s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
     def add_connection(self, hostname, conn_type):
+        if hostname == self.hostname:
+            return
         for row in self.discovered:
             if row[1] == hostname:
                 return
@@ -453,36 +417,39 @@ class BluezChatGui:
                 self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 sock.send("2,%s\t" % self.hostname)
                 self.add_connection(name, "direct")
-                sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
                 return True
             elif identifier == 2:
                 sock.send("3,%s\t" % self.hostname)
 
                 rowc = 0
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
                 for row in rows:
                     rowc += 1
                     sock.send(self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
-                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
+
+                sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
 
                 return True     # all is well
             elif identifier == 3:
                 rowc = 0
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
                 for row in rows:
                     rowc += 1
                     sock.send(self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
-                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
                     conn.commit()
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
+
+                sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
 
                 return True     # all is well
             elif identifier == 4:
