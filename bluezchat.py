@@ -544,7 +544,6 @@ class BluezChatGui:
 
     # run the GUI, start server etc
     def run(self):
-        self.text_buffer.insert(self.text_buffer.get_end_iter(), "loading..")
         self.start_server()
         gtk.main()
 
