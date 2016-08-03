@@ -533,7 +533,7 @@ class BluezChatGui:
                     if dest == self.hostname:
                         if host not in self.blocked:
                             if host in self.keys.keys():
-                                message = self.decrypt(message, self.keys[dest])
+                                message = self.decrypt(message, self.keys[host])
                             self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
                             return True
                     elif dest in self.hosts.keys():
