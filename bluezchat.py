@@ -590,6 +590,10 @@ class BluezChatGui:
                     self.messages.append(s_data)
                 else:
                     return True
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                else:
+                    return True
                 host = s_data_arr[1]
                 dest = s_data_arr[2]
                 if dest == self.hostname:
