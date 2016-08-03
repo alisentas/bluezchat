@@ -320,13 +320,18 @@ class BluezChatGui:
             return True
 
     def send_all(self, mtime, host, dest, message):
+        print self.hosts
         for hostKey in self.hosts.keys():
+            print "key: %s" % hostKey
             if hostKey == host:
+                print "wtf"
                 continue
             if self.hosts[hostKey][0] != 0:
+                print "send to " + hostKey
                 sock = self.peers[self.hosts[hostKey][0]]
                 sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
             else:
+                print "send to " + hostKey
                 sock = self.peers[self.hosts[hostKey][1]]
                 sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
 
@@ -338,6 +343,8 @@ class BluezChatGui:
         data = "4,%s,%s,%s,%s" % (mtime, host, dest, message)
         self.messages.append(data)
         self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
+
+        print "trying to send %s" % data
 
         if dest != "":
             if dest in self.hosts.keys():
@@ -356,6 +363,7 @@ class BluezChatGui:
                 self.send_all(mtime, host, dest, message)
                 return True
         else:
+            print "trying to send all"
             self.send_all(mtime, host, dest, message)
 
     # fires when data is ready
@@ -416,41 +424,57 @@ class BluezChatGui:
                     return True                     # if it returns true, drop the connection here
 
                 # print IRC style connection messages
-                self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 sock.send("2,%s\t" % self.hostname)
                 return True
             elif identifier == 2:
                 sock.send("3,%s\t" % self.hostname)
-
+                name = s_data_arr[1]
                 rowc = 0
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + name + "\"")
                 for row in rows:
                     rowc += 1
                     sock.send(self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
-                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + name + "\"")
                     conn.commit()
-                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                    print "Messages belonged to %s are removed from database." % name
 
+                if name not in self.hosts.keys():   # if we don't know them yet
+                    self.hosts[name] = [0, 0]       # add it to our hosts dict
+                if incoming_type == "wifi":         # and set the address accordingly
+                    self.hosts[name][0] = address
+                else:
+                    self.hosts[name][1] = address
+
+                self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 self.add_connection(s_data_arr[1], "direct")
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
 
                 return True     # all is well
             elif identifier == 3:
+                name = s_data_arr[1]
                 rowc = 0
-                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + name + "\"")
                 for row in rows:
                     rowc += 1
                     sock.send(self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
-                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[1] + "\"")
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + name + "\"")
                     conn.commit()
-                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
+                    print "Messages belonged to %s are removed from database." % name
 
+                if name not in self.hosts.keys():   # if we don't know them yet
+                    self.hosts[name] = [0, 0]       # add it to our hosts dict
+                if incoming_type == "wifi":         # and set the address accordingly
+                    self.hosts[name][0] = address
+                else:
+                    self.hosts[name][1] = address
+
+                self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
                 self.add_connection(s_data_arr[1], "direct")
 
