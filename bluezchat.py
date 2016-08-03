@@ -320,7 +320,7 @@ class BluezChatGui:
             self.sources[address] = source
             return True
 
-    def send_all(mtime, dest, message):
+    def send_all(self, mtime, dest, message):
         for hostKey in self.hosts.keys():
             if hostKey == host:
                 continue
