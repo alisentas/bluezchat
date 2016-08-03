@@ -90,7 +90,8 @@ class BluezChatGui:
         dic = { "on_quit_button_clicked" : self.quit_button_clicked,
                 "on_send_button_clicked" : self.send_button_clicked,
                 "on_scan_button_clicked" : self.scan_button_clicked,
-                "on_devices_tv_cursor_changed" : self.devices_tv_cursor_changed
+                "on_devices_tv_cursor_changed" : self.devices_tv_cursor_changed,
+                "on_keypress": self.key_pressed
                 }
 
         self.main_window_xml.signal_autoconnect(dic)
@@ -142,6 +143,11 @@ class BluezChatGui:
         self.timeout = 10                           # bluetooth connection timeout
 
 # --- gui signal handlers
+
+    def key_pressed(self, widget, event):
+        keyname = gtk.gdk.keyval_name(event.keyval)
+        if keyname == "Return":
+            self.send_button_clicked(self.main_window_xml)
 
     # quits the gui when quit button is clicked
     def quit_button_clicked(self, widget):
