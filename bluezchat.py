@@ -320,6 +320,12 @@ class BluezChatGui:
         else:
             return "%s %s %02s:%02s" % (calendar.month_abbr[datetimeObj.month], datetimeObj.day, datetimeObj.hour, datetimeObj.minute)
 
+    def add_connection(self, hostname, conn_type)
+        for row in self.discovered:
+            if row[1] == hostname:
+                return
+        self.discovered.append ((conn_type, hostname))
+
     # fires when someone try to connect us via bluetooth
     def incoming_connection(self, source, condition):
         sock, info = self.server_sock.accept()  # accept the socket
@@ -349,6 +355,44 @@ class BluezChatGui:
             self.sources[address] = source
             return True
 
+    def send_all(mtime, dest, message):
+        for hostKey in self.hosts.keys():
+            if hostKey == host:
+                continue
+            if self.hosts[hostKey][0] != 0:
+                sock = self.peers[self.hosts[hostKey][0]]
+                sock.send(self.get_data(mtime, self.hostname, dest, message) + "\t")
+            else:
+                sock = self.peers[self.hosts[hostKey][1]]
+                sock.send(self.get_data(mtime, self.hostname, dest, message) + "\t")
+
+    def send(dest, message):
+        mtime = int(time.time())            # current timestamp, it is float make it integer
+        host = self.hostname                # our hostname
+
+        # create data
+        data = "%s,%s,%s,%s" % (mtime, host, dest, message)
+        self.messages.append(data)
+
+        if dest != "":
+            if dest in self.hosts.keys():
+                if self.hosts[dest][0] != 0 and incoming_type != "wifi":
+                    sock = self.peers[self.hosts[dest][0]]
+                    sock.send(data + "\t")
+                else:
+                    sock = self.peers[self.hosts[dest][1]]
+                    sock.send(data + "\t")
+                print "Data sent to that host"
+                return True
+            else:
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
+                print "Messaged added to queue"
+                conn.commit()
+                self.sendall(mtime, dest, message)
+                return True
+        else:
+            self.sendall(mtime, dest, message)
+
     # fires when data is ready
     def data_ready(self, sock, condition):
         incoming_type = self.get_socket_type(sock)  # get incoming socket type
@@ -370,8 +414,7 @@ class BluezChatGui:
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
                 # parse the incoming data
             self.data_parse(sock, data)
-
-        
+      
         return True
 
     def data_parse(self, sock, data):
@@ -384,8 +427,17 @@ class BluezChatGui:
             s_data = str(data)              # make data a string if not
             s_data_arr = s_data.split(",")  # and split using ,
 
-            if not s_data_arr[0].isdigit():         # if first index is not a number (timestamp)
-                name = s_data_arr[0]                # than it's the remote hostname
+            identifier = int(s_data_arr[0])
+            # 1 for request                 1,hostname
+            # 2 for response                2,hostname
+            # 3 for response response       3,hostname
+            # 4 for messaging               4,mtime,host,dest,msg
+            # 5 for hostname exchange       5,host,host,host,host...
+            # 6 for key exchange request    6,publickey
+            # 7 for key exchange response   7,pass
+
+            if identifier == 1:
+                name = s_data_arr[1]                # than it's the remote hostname
                 if name not in self.hosts.keys():   # if we don't know them yet
                     self.hosts[name] = [0, 0]       # add it to our hosts dict
                 if incoming_type == "wifi":         # and set the address accordingly
@@ -398,16 +450,13 @@ class BluezChatGui:
 
                 # print IRC style connection messages
                 self.add_text("\n%s (%s) has joined." % (name, incoming_type))
+                sock.send("2,%s\t" % self.hostname)
+                self.add_connection(name, "direct")
+                sock.send("5,%s\t" % ",".join(self.hosts.keys()))
+                return True
+            elif identifier == 2:
+                sock.send("3,%s\t" % self.hostname)
 
-                # incoming data was in the form of host,1 or host,2
-                # host,1 means its discovery request, we send our hostname,2 to this kind of messages
-                if s_data_arr[1] == "1":
-                    sock.send(self.hostname + ",2\t")
-
-                # self.discovered is not an array, append function adds people to the connections list in the GUI
-                self.discovered.append (("", name))
-                
-                # following lines gets the messages we have in our database for that host, and sends it to them
                 rowc = 0
                 rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                 for row in rows:
@@ -421,65 +470,62 @@ class BluezChatGui:
                     print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
                 return True     # all is well
-
-            # now that we know message is in the form of timestamp,host,dest,msg
-            # we can process it
-            mtime = datetime.datetime.fromtimestamp(int(s_data_arr[0]))     # get its time
-            host = s_data_arr[1]                                            # host,
-            dest = s_data_arr[2]                                            # destination
-            message = ",".join(s_data_arr[3:])                              # and concat other indexes to get message
-
-            # if we processed it before, drop it, if not add it to messages list
-            if s_data not in self.messages:
-                self.messages.append(s_data)
-            else:
-                return True
-
-            # if message is sent to everybody or just us, print it on screen
-            if dest == "" or dest == self.hostname:
-                if host not in self.blocked:
-                    self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                if dest == self.hostname: # if it's us, stop sending it to everyone
-                    return True
-
-            # if destination is not us but somebody
-            if dest != "":
-                # search that destination in our hosts, if found, send it to him/her
-                if dest in self.hosts.keys():
-                    if self.hosts[dest][0] != 0 and incoming_type != "wifi":
-                        sock = self.peers[self.hosts[dest][0]]
-                        sock.send(data + "\t")
-                    else:
-                        sock = self.peers[self.hosts[dest][1]]
-                        sock.send(data + "\t")
-                    print "Data sent to that host"
-                    return True
-                else: # if we don't see the host, queue the message
-                    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
-                    print "Messaged added to queue"
+            elif identifier == 3:
+                rowc = 0
+                rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
+                for row in rows:
+                    rowc += 1
+                    sock.send(self.get_data(row[0], row[1], row[2], row[3]))
+                    print self.get_data(row[0], row[1], row[2], row[3])
+                    print "Queued message [%s] sent." % row[3]
+                if rowc > 0:
+                    conn.execute("DELETE FROM messages WHERE dest=\"" + s_data_arr[0] + "\"")
                     conn.commit()
+                    print "Messages belonged to %s are removed from database." % s_data_arr[0]
 
-                    # also send it to everyone
-                    for hostKey in self.hosts.keys():
-                        if hostKey == host:
-                            continue
-                        if self.hosts[hostKey][0] != 0:
-                            sock = self.peers[self.hosts[hostKey][0]]
-                            sock.send(s_data + "\t")
+                return True     # all is well
+            elif identifier == 4:
+                mtime = datetime.datetime.fromtimestamp(int(s_data_arr[1]))     # get its time
+                host = s_data_arr[2]                                            # host,
+                dest = s_data_arr[3]                                            # destination
+                message = ",".join(s_data_arr[4:])
+
+                # if we processed it before, drop it, if not add it to messages list
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                else:
+                    return True
+
+                if dest != "":
+                    if dest == self.hostname:
+                        if host not in self.blocked:
+                            self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
+                        if dest == self.hostname: # if it's us, stop sending it to everyone
+                            return True
+                    elif dest in self.hosts.keys():
+                        if self.hosts[dest][0] != 0 and incoming_type != "wifi":
+                            sock = self.peers[self.hosts[dest][0]]
+                            sock.send(data + "\t")
                         else:
-                            sock = self.peers[self.hosts[hostKey][1]]
-                            sock.send(s_data + "\t")
-            else:
-                # if message is meant to send to anyone, we printed it above, now it's time to send it
-                for hostKey in self.hosts.keys():
-                    if hostKey == host:
-                        continue
-                    if self.hosts[hostKey][0] != 0:
-                        sock = self.peers[self.hosts[hostKey][0]]
-                        sock.send(s_data + "\t")
+                            sock = self.peers[self.hosts[dest][1]]
+                            sock.send(data + "\t")
+                        print "Data sent to that host"
+                        return True
                     else:
-                        sock = self.peers[self.hosts[hostKey][1]]
-                        sock.send(s_data + "\t")
+                        conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
+                        print "Messaged added to queue"
+                        conn.commit()
+                        self.sendall(mtime, dest, message)
+                        return True
+                else:
+                    if host not in self.blocked:
+                        self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
+                    self.sendall(mtime, dest, message)
+                    return True
+            elif identifier == 5:
+                for hostname in s_data_arr[1:]:
+                    add_connection(hostname, "remote")
+                return True
 
         else:
             # if data length is zero, drop the connection
@@ -500,7 +546,7 @@ class BluezChatGui:
                         break
             sock.close()                # close the connection
             
-        return True
+            return True
 
 # --- other stuff
     # returns socket type
