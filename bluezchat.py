@@ -149,6 +149,7 @@ class BluezChatGui:
 
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
+        print "Scanning process initiated."
         self.quit_button.set_sensitive(False)
         self.scan_button.set_sensitive(False)
 
@@ -156,6 +157,7 @@ class BluezChatGui:
         # we first do the wifi scan because sometimes bluetooth discovery disables wifi connection
 
         if self.wifi:   # if wifi is enabled
+            print "Wifi scan started."
             ip_ = 1
             while ip_ < 255:
                 ip_ = ip_ + 1
@@ -180,12 +182,14 @@ class BluezChatGui:
                 thread.join()
 
             del self.thread_list[:]         # remove all threads
+            print "Wifi scan ended."
         else:
             "Wifi scan skipped, not connected to wifi."
 
         # Initiate bluetooth scan ###########################################
         
         if self.bluetooth:
+            print "Bluetooth scan started."
             for addr, name in bluetooth.discover_devices (lookup_names = True): # discover nearby devices using library function
                 if addr in self.addresses.values():
                     print "Already connected to %s" % addr
@@ -205,6 +209,7 @@ class BluezChatGui:
                 thread.join()
 
             del self.thread_list[:]
+            print "Bluetooth scan ended."
 
         self.quit_button.set_sensitive(True)
         self.scan_button.set_sensitive(True)
@@ -416,16 +421,16 @@ class BluezChatGui:
                     print "Messaged added to queue"
                     conn.commit()
 
-                # also send it to everyone
-                for hostKey in self.hosts.keys():
-                    if hostKey == host:
-                        continue
-                    if self.hosts[hostKey][0] != 0:
-                        sock = self.peers[self.hosts[hostKey][0]]
-                        sock.send(s_data + "\t")
-                    else:
-                        sock = self.peers[self.hosts[hostKey][1]]
-                        sock.send(s_data + "\t")
+                    # also send it to everyone
+                    for hostKey in self.hosts.keys():
+                        if hostKey == host:
+                            continue
+                        if self.hosts[hostKey][0] != 0:
+                            sock = self.peers[self.hosts[hostKey][0]]
+                            sock.send(s_data + "\t")
+                        else:
+                            sock = self.peers[self.hosts[hostKey][1]]
+                            sock.send(s_data + "\t")
             else:
                 # if message is meant to send to anyone, we printed it above, now it's time to send it
                 for hostKey in self.hosts.keys():
