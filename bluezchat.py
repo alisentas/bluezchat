@@ -124,6 +124,7 @@ class BluezChatGui:
         self.hosts = {}         # holds wifi and bluetooth addresses for hostnames, indexed by hostnames
         self.messages = []      # holds previous messages
         self.thread_list = []   # holds threads
+        self.blocked = []
 
         # the listening sockets
         self.server_sock = None                     # bluetooth listening socket
@@ -151,7 +152,8 @@ class BluezChatGui:
 
     # quits the gui when quit button is clicked
     def quit_button_clicked(self, widget):
-        gtk.main_quit()
+        #gtk.main_quit()
+        print dir(self.main_window_xml)
 
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
@@ -224,11 +226,32 @@ class BluezChatGui:
 
     # starts when send button is clicked
     def send_button_clicked(self, widget):
+        entry = self.input_tb.get_text()
+        if entry[0] == "/":
+            # this is a command
+            entry = entry.split(" ")
+            if entry[0] == "/block":
+                if len(entry) > 1:
+                    for i in range(1,  len(entry)):
+                        self.blocked.append(entry[i])
+                        self.add_text("\n%s added to blocked list." % entry[i])
+                else:
+                    self.add_text("\nGive me some names to block.")
+
+                self.input_tb.set_text("")
+                return True
+            elif entry[0] == "/help":
+                self.add_text("COMMANDS: /help, /block <user>")
+                self.input_tb.set_text("")
+                return True
+            
+            self.add_text("\n%s is not a command. See /help for available commands." % entry[0])
+            return False
         # we will send messages in the form: timestamp,our hostname,destination host name,message
         mtime = int(time.time())            # current timestamp, it is float make it integer
         host = self.hostname                # our hostname
         dest = self.input_tb2.get_text()    # destination is the value of textbox2
-        message = self.input_tb.get_text()  # message is the vaue of textbox1
+        message = entry  # message is the vaue of textbox1
         
         # create data
         data = "%s,%s,%s,%s" % (mtime, host, dest, message)
@@ -414,7 +437,8 @@ class BluezChatGui:
 
             # if message is sent to everybody or just us, print it on screen
             if dest == "" or dest == self.hostname:
-                self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
+                if host not in self.blocked:
+                    self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
                 if dest == self.hostname: # if it's us, stop sending it to everyone
                     return True
 
@@ -461,16 +485,19 @@ class BluezChatGui:
             # if data length is zero, drop the connection
             self.add_text("\n%s has quit. (ping timeout.)" % address)
             gobject.source_remove(self.sources[address])
+            hostname = None
             for host in self.hosts.keys():
                 if self.hosts[host][0] == self.addresses[sock] or self.hosts[host][1] == self.addresses[sock]:
+                    hostname = host
                     del self.hosts[host]
             del self.sources[address]
             del self.peers[address]
             del self.addresses[sock]
-            for row in self.discovered: # this is how you remove it from GTK tree view
-                if row[0] == address:
-                    self.discovered.remove(row.iter)
-                    break
+            if hostname != None:
+                for row in self.discovered: # this is how you remove it from GTK tree view
+                    if row[1] == hostname:
+                        self.discovered.remove(row.iter)
+                        break
             sock.close()                # close the connection
             
         return True
