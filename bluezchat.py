@@ -181,10 +181,7 @@ class BluezChatGui:
 
     # quits the gui when quit button is clicked
     def quit_button_clicked(self, widget):
-        #gtk.main_quit()
-        self.add_connection("deneme", "remote")
-        self.data_parse(None, "6,uysal,-----BEGIN RSA PUBLIC KEY-----\nMCgCIQCR33BCUVKDLqFYuFgTSppQEXoezOI05EPRfuAWmBSXSwIDAQAB\n-----END RSA PUBLIC KEY-----\n")
-
+        print self.keys
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
         print "Scanning process initiated."
@@ -449,8 +446,8 @@ class BluezChatGui:
             # 3 for response response       3,hostname
             # 4 for messaging               4,mtime,host,dest,msg
             # 5 for hostname exchange       5,host,host,host,host...
-            # 6 for key exchange request    6,host,publickey
-            # 7 for key exchange response   7,host,pass
+            # 6 for key exchange request    6,host,dest,publickey
+            # 7 for key exchange response   7,host,dest,pass
 
             if identifier == 1:
                 name = s_data_arr[1]                # than it's the remote hostname
@@ -564,32 +561,44 @@ class BluezChatGui:
                     self.add_connection(hostname, "remote")
                 return True
             elif identifier == 6:
-                remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[2])
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                else:
+                    return True
                 host = s_data_arr[1]
-                key = str(random.randrange(1000000, 9999999))
-                data = base64.b64encode(rsa.encrypt(key, remoteKey))
-                self.keys[host] = key
-                if host in self.hosts.keys():
-                    if self.hosts[dest][0] != 0:
-                        sock = self.peers[self.hosts[dest][0]]
-                        sock.send("7," + data + "\t")
+                dest = s_data_arr[2]
+                if dest == self.hostname:
+                    remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[3])
+                    key = str(random.randrange(1000000, 9999999))
+                    data = base64.b64encode(rsa.encrypt(key, remoteKey))
+                    self.keys[host] = key
+                    if dest in self.hosts.keys():
+                        if self.hosts[dest][0] != 0:
+                            sock = self.peers[self.hosts[dest][0]]
+                            sock.send("7," + data + "\t")
+                        else:
+                            sock = self.peers[self.hosts[dest][1]]
+                            sock.send("7," + data + "\t")
+                        print "Data sent to that host"
+                        return True
                     else:
-                        sock = self.peers[self.hosts[dest][1]]
-                        sock.send("7," + data + "\t")
-                    print "Data sent to that host"
+                        self.send_all(7, host=self.hostname, dest=host, key = data)
                     return True
                 else:
-                    self.send_all(7, host=self.hostname, key = data)
-                return True
+                    self.send_all(6, host=host, dest=dest, key = data)
             elif identifier == 7:
                 if s_data not in self.messages:
                     self.messages.append(s_data)
                 else:
                     return True
                 host = s_data_arr[1]
-                key = rsa.decrypt(base64.b64decode(s_data_arr[2]), self.privateKey)
-                self.keys[host] = key
-                return True
+                dest = s_data_arr[2]
+                if dest == self.hostname:
+                    key = rsa.decrypt(base64.b64decode(s_data_arr[2]), self.privateKey)
+                    self.keys[host] = key
+                    return True
+                else:
+                    self.send_all(7, host=host, dest=dest, key = data)
         else:
             # if data length is zero, drop the connection
             self.add_text("\n%s has quit. (ping timeout.)" % address)
