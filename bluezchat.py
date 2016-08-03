@@ -9,6 +9,7 @@ import calendar
 try:
     import sqlite3
     conn = sqlite3.connect("bluezchat.db") # create new database connection
+    conn.text_factory = str
 except:
     print "Install sqlite3 first"
 
@@ -153,7 +154,7 @@ class BluezChatGui:
     # quits the gui when quit button is clicked
     def quit_button_clicked(self, widget):
         #gtk.main_quit()
-        print dir(self.main_window_xml)
+        self.add_connection("deneme", "remote")
 
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
@@ -452,7 +453,7 @@ class BluezChatGui:
                 self.add_text("\n%s (%s) has joined." % (name, incoming_type))
                 sock.send("2,%s\t" % self.hostname)
                 self.add_connection(name, "direct")
-                sock.send("5,%s\t" % ",".join(self.hosts.keys()))
+                sock.send("5,%s\t" % ",".join([row[1] for row in self.discovered]))
                 return True
             elif identifier == 2:
                 sock.send("3,%s\t" % self.hostname)
@@ -524,7 +525,7 @@ class BluezChatGui:
                     return True
             elif identifier == 5:
                 for hostname in s_data_arr[1:]:
-                    add_connection(hostname, "remote")
+                    self.add_connection(hostname, "remote")
                 return True
 
         else:
