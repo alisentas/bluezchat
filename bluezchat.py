@@ -331,6 +331,7 @@ class BluezChatGui:
         # we also split the data using \t because when a connection occurs, hosts send us messages from their
         # databases, they use more then one sock.send methods but we read them all at the same time
         datas = sock.recv(1023).split("\t")
+        print "Raw data:[%s]" % "\t".join(datas)
         for data in datas:
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
             # parse the incoming data
@@ -384,7 +385,7 @@ class BluezChatGui:
                 if s_data_arr[1] == "1":
                     sock.send(self.hostname + ",2\t")
                 elif s_data_arr[1] == "2":
-                    sock.send(self.hostname + ",2\t")
+                    sock.send(self.hostname + ",3\t")
 
                 return True     # all is well
 
