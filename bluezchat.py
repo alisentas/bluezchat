@@ -5,6 +5,14 @@ import threading   # for threads
 import socket      # wifi sockets
 import datetime    # for datetime column in db
 import calendar
+import base64
+import random
+
+try:
+    import rsa
+    from Crypto.Cipher import XOR
+except:
+    print "sudo apt-get install python-rsa python-crypto"
 
 try:
     import sqlite3
@@ -144,6 +152,26 @@ class BluezChatGui:
         self.bluetoothPort = 0x1001                 # bluetooth listening port
         self.timeout = 10                           # bluetooth connection timeout
 
+        self.publicKey = None
+        self.privateKey = None
+        self.keys = {}
+
+        if not os.path.isfile("public.key"):
+            (pubkey, privkey) = rsa.newkeys(256)
+            publickey = open("public.key", "w")
+            privatekey = open("private.key", "w")
+            self.publicKey = pubkey
+            self.privateKey = privkey
+            publickey.write(self.publicKey.save_pkcs1())
+            privatekey.write(self.privateKey.save_pkcs1())
+            publickey.close()
+            privatekey.close()
+        else:
+            publickey = open("public.key", "r").read()
+            privatekey = open("private.key", "r").read()
+            self.publicKey = rsa.PublicKey.load_pkcs1(publickey)
+            self.privateKey = rsa.PrivateKey.load_pkcs1(privatekey)
+
 # --- gui signal handlers
 
     def key_pressed(self, widget, event):
@@ -155,6 +183,7 @@ class BluezChatGui:
     def quit_button_clicked(self, widget):
         #gtk.main_quit()
         self.add_connection("deneme", "remote")
+        self.data_parse(None, "6,uysal,-----BEGIN RSA PUBLIC KEY-----\nMCgCIQCR33BCUVKDLqFYuFgTSppQEXoezOI05EPRfuAWmBSXSwIDAQAB\n-----END RSA PUBLIC KEY-----\n")
 
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
@@ -244,6 +273,12 @@ class BluezChatGui:
 
                 self.input_tb.set_text("")
                 return True
+            elif entry[0] == "/encrypt":
+                if len(entry) != 2:
+                    self.add_text("\nWhat?.")
+                else:
+                    self.send_all(6, host = entry[1], key = self.publicKey.save_pkcs1())
+                return True
             elif entry[0] == "/help":
                 self.add_text("COMMANDS: /help, /block <user>")
                 self.input_tb.set_text("")
@@ -319,21 +354,28 @@ class BluezChatGui:
             self.sources[address] = source
             return True
 
-    def send_all(self, mtime, host, dest, message):
-        print self.hosts
-        for hostKey in self.hosts.keys():
-            print "key: %s" % hostKey
-            if hostKey == host:
-                print "wtf"
-                continue
-            if self.hosts[hostKey][0] != 0:
-                print "send to " + hostKey
-                sock = self.peers[self.hosts[hostKey][0]]
-                sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
-            else:
-                print "send to " + hostKey
-                sock = self.peers[self.hosts[hostKey][1]]
-                sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
+    def send_all(self, protocol, mtime = None, host = None, dest = None, message = None, key = None):
+        if protocol == 4:
+            for hostKey in self.hosts.keys():
+                if hostKey == host:
+                    continue
+                if self.hosts[hostKey][0] != 0:
+                    sock = self.peers[self.hosts[hostKey][0]]
+                    sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
+                else:
+                    sock = self.peers[self.hosts[hostKey][1]]
+                    sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
+        elif protocol == 6 or protocol == 7:
+            print "Trying to send: %s" % (str(protocol) + "," + host + "," + key + "\t")
+            for hostKey in self.hosts.keys():
+                if hostKey == host:
+                    continue
+                if self.hosts[hostKey][0] != 0:
+                    sock = self.peers[self.hosts[hostKey][0]]
+                    sock.send(str(protocol) + "," + host + "," + key + "\t")
+                else:
+                    sock = self.peers[self.hosts[hostKey][1]]
+                    sock.send(str(protocol) + "," + host + "," + key + "\t")
 
     def send(self, dest, message):
         mtime = int(time.time())            # current timestamp, it is float make it integer
@@ -344,9 +386,9 @@ class BluezChatGui:
         self.messages.append(data)
         self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, message))
 
-        print "trying to send %s" % data
-
         if dest != "":
+            if dest in self.keys.keys():
+                message = self.encrypt(message, self.keys[host])
             if dest in self.hosts.keys():
                 if self.hosts[dest][0] != 0 and incoming_type != "wifi":
                     sock = self.peers[self.hosts[dest][0]]
@@ -360,11 +402,10 @@ class BluezChatGui:
                 conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
-                self.send_all(mtime, host, dest, message)
+                self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
                 return True
         else:
-            print "trying to send all"
-            self.send_all(mtime, host, dest, message)
+            self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
 
     # fires when data is ready
     def data_ready(self, sock, condition):
@@ -393,7 +434,7 @@ class BluezChatGui:
         return True
 
     def data_parse(self, sock, data):
-        address = self.addresses[sock]              # incoming socket address
+        #address = self.addresses[sock]              # incoming socket address
         incoming_type = self.get_socket_type(sock)  # again, we check the incoming type here too
         
         # if data length is greater than zero then process it, if not drop the connection
@@ -408,8 +449,8 @@ class BluezChatGui:
             # 3 for response response       3,hostname
             # 4 for messaging               4,mtime,host,dest,msg
             # 5 for hostname exchange       5,host,host,host,host...
-            # 6 for key exchange request    6,publickey
-            # 7 for key exchange response   7,pass
+            # 6 for key exchange request    6,host,publickey
+            # 7 for key exchange response   7,host,pass
 
             if identifier == 1:
                 name = s_data_arr[1]                # than it's the remote hostname
@@ -494,8 +535,9 @@ class BluezChatGui:
                 if dest != "":
                     if dest == self.hostname:
                         if host not in self.blocked:
+                            if host in self.keys.keys():
+                                message = self.decrypt(message, self.keys[host])
                             self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                        if dest == self.hostname: # if it's us, stop sending it to everyone
                             return True
                     elif dest in self.hosts.keys():
                         if self.hosts[dest][0] != 0 and incoming_type != "wifi":
@@ -510,18 +552,46 @@ class BluezChatGui:
                         conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                         print "Messaged added to queue"
                         conn.commit()
-                        self.send_all(mtime, host, dest, message)
+                        self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
                         return True
                 else:
                     if host not in self.blocked:
                         self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                    self.send_all(mtime, host, dest, message)
+                    self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
                     return True
             elif identifier == 5:
                 for hostname in s_data_arr[1:]:
                     self.add_connection(hostname, "remote")
                 return True
-
+            elif identifier == 6:
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                else:
+                    return True
+                remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[2])
+                host = s_data_arr[1]
+                key = str(random.randrange(1000000, 9999999))
+                data = base64.b64encode(rsa.encrypt(key, remoteKey))
+                self.keys["host"] = key
+                if host in self.hosts.keys():
+                    if self.hosts[dest][0] != 0:
+                        sock = self.peers[self.hosts[dest][0]]
+                        sock.send("7," + data + "\t")
+                    else:
+                        sock = self.peers[self.hosts[dest][1]]
+                        sock.send("7," + data + "\t")
+                    print "Data sent to that host"
+                    return True
+                return True
+            elif identifier == 7:
+                if s_data not in self.messages:
+                    self.messages.append(s_data)
+                else:
+                    return True
+                host = s_data_arr[1]
+                key = rsa.decrypt(base64.b64decode(s_data_arr[2]), self.privateKey)
+                self.keys[host] = key
+                return True
         else:
             # if data length is zero, drop the connection
             self.add_text("\n%s has quit. (ping timeout.)" % address)
@@ -544,6 +614,14 @@ class BluezChatGui:
             return True
 
 # --- other stuff
+    def encrypt(self, message, key):
+        cipher = XOR.new(key)
+        return base64.b64encode(cipher.encrypt(message))
+
+    def decrypt(self, message, key):
+        cipher = XOR.new(key)
+        return cipher.decrypt(base64.b64decode(message))
+
     # returns socket type
     def get_socket_type(self, sock):
         socket_type = str(type(sock))
