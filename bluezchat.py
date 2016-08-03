@@ -334,8 +334,9 @@ class BluezChatGui:
         for data in datas:
             print "Data:[%s]\nSocket Type:[%s]\n" % (data, incoming_type)
             # parse the incoming data
-            return self.data_parse(sock, data)
+            self.data_parse(sock, data)
         
+        return True
 
     def data_parse(self, sock, data):
         address = self.addresses[sock]              # incoming socket address
