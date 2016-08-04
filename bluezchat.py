@@ -590,7 +590,7 @@ class BluezChatGui:
                         self.send_all(7, host=self.hostname, dest=host, key = data)
                     return True
                 else:
-                    self.send_all(6, host=host, dest=dest, key = data)
+                    self.send_all(6, host=host, dest=dest, key = s_data_arr[3])
                     return True
             elif identifier == 7:
                 if s_data not in self.messages:
