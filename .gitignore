@@ -86,3 +86,4 @@ ENV/
 .ropeproject
 
 *.key
+bluezchat.db

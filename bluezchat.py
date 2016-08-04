@@ -13,10 +13,11 @@ try:
     from Crypto.Cipher import XOR
 except:
     print "sudo apt-get install python-rsa python-crypto"
-
 try:
     import sqlite3
     conn = sqlite3.connect("bluezchat.db") # create new database connection
+    conn.execute("CREATE TABLE IF NOT EXISTS \"messages\" (mtime INT, host VARCHAR(50), dest VARCHAR(50), content VARCHAR(1023))")
+    conn.commit()
     conn.text_factory = str
 except:
     print "Install sqlite3 first"
