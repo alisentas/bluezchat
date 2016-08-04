@@ -364,7 +364,7 @@ class BluezChatGui:
                     sock = self.peers[self.hosts[hostKey][1]]
                     sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
         elif protocol == 6 or protocol == 7:
-            print "Trying to send: %s" % (str(protocol) + "," + host + "," + key + "\t")
+            print "Trying to send: %s" % (str(protocol) + "," + host + "," + dest + "," + key + "\t")
             for hostKey in self.hosts.keys():
                 if self.hosts[hostKey][0] != 0:
                     sock = self.peers[self.hosts[hostKey][0]]
@@ -384,6 +384,7 @@ class BluezChatGui:
         # create data
         data = "4,%s,%s,%s,%s" % (mtime, host, dest, message)
         self.messages.append(data)
+        print "Trying to send [%s]" % data
         self.add_text("\n[%s] %s: %s" % (self.get_time(datetime.datetime.fromtimestamp(mtime)), self.hostname, original))
 
         if dest != "":
@@ -550,12 +551,12 @@ class BluezChatGui:
                         conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
                         print "Messaged added to queue"
                         conn.commit()
-                        self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
+                        self.send_all(4, mtime = int(s_data_arr[1]), host = host, dest = dest, message = message)
                         return True
                 else:
                     if host not in self.blocked:
                         self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
-                    self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
+                    self.send_all(4, mtime = int(s_data_arr[1]), host = host, dest = dest, message = message)
                     return True
             elif identifier == 5:
                 for hostname in s_data_arr[1:]:
