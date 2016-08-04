@@ -400,7 +400,7 @@ class BluezChatGui:
                 print "Data sent to that host"
                 return True
             elif dest not in self.keys.keys():
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", mtime, host, dest, message)
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
                 self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
@@ -575,19 +575,19 @@ class BluezChatGui:
                 if dest == self.hostname:
                     remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[3])
                     key = str(random.randrange(1000000, 9999999))
-                    data = base64.b64encode(rsa.encrypt(key, remoteKey))
+                    keydata = base64.b64encode(rsa.encrypt(key, remoteKey))
                     self.keys[host] = key
                     if host in self.hosts.keys():
                         if self.hosts[host][0] != 0:
                             sock = self.peers[self.hosts[host][0]]
-                            sock.send("7," + self.hostname + "," + host + "," + data + "\t")
+                            sock.send("7," + self.hostname + "," + host + "," + keydata + "\t")
                         else:
                             sock = self.peers[self.hosts[host][1]]
-                            sock.send("7," + self.hostname + "," + host + "," + data + "\t")
+                            sock.send("7," + self.hostname + "," + host + "," + keydata + "\t")
                         print "Data sent to that host"
                         return True
                     else:
-                        self.send_all(7, host=self.hostname, dest=host, key = data)
+                        self.send_all(7, host=self.hostname, dest=host, key = keydata)
                     return True
                 else:
                     self.send_all(6, host=host, dest=dest, key = s_data_arr[3])
@@ -607,10 +607,10 @@ class BluezChatGui:
                 elif dest in self.hosts.keys():
                     if self.hosts[dest][0] != 0:
                         sock = self.peers[self.hosts[dest][0]]
-                        sock.send("7," + host + "," + dest + "," + data + "\t")
+                        sock.send("7," + host + "," + dest + "," + s_data_arr[3] + "\t")
                     else:
                         sock = self.peers[self.hosts[host][1]]
-                        sock.send("7," + host + "," + dest + "," + data + "\t")
+                        sock.send("7," + host + "," + dest + "," + s_data_arr[3] + "\t")
                     print "Data sent to that host"
                     return True
                 else:
