@@ -359,10 +359,10 @@ class BluezChatGui:
                     continue
                 if self.hosts[hostKey][0] != 0:
                     sock = self.peers[self.hosts[hostKey][0]]
-                    sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
+                    sock.send("4," + self.get_data(mtime, host, dest, message) + "\t")
                 else:
                     sock = self.peers[self.hosts[hostKey][1]]
-                    sock.send("4," + self.get_data(mtime, self.hostname, dest, message) + "\t")
+                    sock.send("4," + self.get_data(mtime, host, dest, message) + "\t")
         elif protocol == 6 or protocol == 7:
             print "Trying to send: %s" % (str(protocol) + "," + host + "," + dest + "," + key + "\t")
             for hostKey in self.hosts.keys():
