@@ -85,4 +85,4 @@ ENV/
 # Rope project settings
 .ropeproject
 
-.key
+*.key

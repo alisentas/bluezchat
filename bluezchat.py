@@ -366,6 +366,8 @@ class BluezChatGui:
         elif protocol == 6 or protocol == 7:
             print "Trying to send: %s" % (str(protocol) + "," + host + "," + dest + "," + key + "\t")
             for hostKey in self.hosts.keys():
+                if hostKey == host:
+                    continue
                 if self.hosts[hostKey][0] != 0:
                     sock = self.peers[self.hosts[hostKey][0]]
                     sock.send(str(protocol) + "," + host + "," + dest + "," + key + "\t")
@@ -588,7 +590,7 @@ class BluezChatGui:
                         self.send_all(7, host=self.hostname, dest=host, key = data)
                     return True
                 else:
-                    self.send_all(7, host=host, dest=dest, key = data)
+                    self.send_all(6, host=host, dest=dest, key = data)
                     return True
             elif identifier == 7:
                 if s_data not in self.messages:
@@ -601,6 +603,15 @@ class BluezChatGui:
                 if dest == self.hostname:
                     key = rsa.decrypt(base64.b64decode(s_data_arr[3]), self.privateKey)
                     self.keys[host] = key
+                    return True
+                elif dest in self.hosts.keys():
+                    if self.hosts[dest][0] != 0:
+                        sock = self.peers[self.hosts[dest][0]]
+                        sock.send("7," + host + "," + dest + "," + data + "\t")
+                    else:
+                        sock = self.peers[self.hosts[host][1]]
+                        sock.send("7," + host + "," + dest + "," + data + "\t")
+                    print "Data sent to that host"
                     return True
                 else:
                     self.send_all(7, host=host, dest=dest, key = data)
