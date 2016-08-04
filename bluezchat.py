@@ -400,7 +400,7 @@ class BluezChatGui:
                 print "Data sent to that host"
                 return True
             elif dest not in self.keys.keys():
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[1]), host, dest, message))
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", mtime, host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
                 self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
@@ -614,7 +614,7 @@ class BluezChatGui:
                     print "Data sent to that host"
                     return True
                 else:
-                    self.send_all(7, host=host, dest=dest, key = data)
+                    self.send_all(7, host=host, dest=dest, key = s_data_arr[3])
         else:
             # if data length is zero, drop the connection
             self.add_text("\n%s has quit. (ping timeout.)" % address)
