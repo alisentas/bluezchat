@@ -399,10 +399,11 @@ class BluezChatGui:
                     sock.send(data + "\t")
                 print "Data sent to that host"
                 return True
-            elif dest not in self.keys.keys():
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
-                print "Messaged added to queue"
-                conn.commit()
+            else:
+                if dest not in self.keys.keys():
+                    conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (mtime, host, dest, message))
+                    print "Messaged added to queue"
+                    conn.commit()
                 self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
                 return True
         else:
