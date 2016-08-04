@@ -54,6 +54,15 @@
                   </widget>
                 </child>
                 <child>
+                  <widget class="GtkButton" id="debug_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">_Debug</property>
+                    <property name="use_underline">True</property>
+                    <signal name="clicked" handler="on_debug_button_clicked"/>
+                  </widget>
+                </child>
+                <child>
                   <widget class="GtkButton" id="scan_button">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>

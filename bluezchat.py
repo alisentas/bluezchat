@@ -100,6 +100,7 @@ class BluezChatGui:
         dic = { "on_quit_button_clicked" : self.quit_button_clicked,
                 "on_send_button_clicked" : self.send_button_clicked,
                 "on_scan_button_clicked" : self.scan_button_clicked,
+                "on_debug_button_clicked" : self.debug_button_clicked,
                 "on_devices_tv_cursor_changed" : self.devices_tv_cursor_changed,
                 "on_keypress": self.key_pressed
                 }
@@ -182,7 +183,13 @@ class BluezChatGui:
 
     # quits the gui when quit button is clicked
     def quit_button_clicked(self, widget):
-        print self.keys
+        gtk.main_quit()
+
+    def debug_button_clicked(self, widget):
+        print "Hosts: %s" % self.hosts
+        print "Peers: %s" % self.peers
+        print "Addresses: %s" % self.addresses
+        print "Keys: %s" % self.keys
     # scans for reachable bluetooth and wifi devices
     def scan_button_clicked(self, widget):
         print "Scanning process initiated."
