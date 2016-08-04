@@ -397,8 +397,8 @@ class BluezChatGui:
                     sock.send(data + "\t")
                 print "Data sent to that host"
                 return True
-            else:
-                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
+            elif dest not in self.keys.keys():
+                conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[1]), host, dest, message))
                 print "Messaged added to queue"
                 conn.commit()
                 self.send_all(4, mtime = mtime, host = host, dest = dest, message = message)
@@ -541,14 +541,14 @@ class BluezChatGui:
                     elif dest in self.hosts.keys():
                         if self.hosts[dest][0] != 0 and incoming_type != "wifi":
                             sock = self.peers[self.hosts[dest][0]]
-                            sock.send(data + "\t")
+                            sock.send(s_data + "\t")
                         else:
                             sock = self.peers[self.hosts[dest][1]]
-                            sock.send(data + "\t")
+                            sock.send(s_data + "\t")
                         print "Data sent to that host"
                         return True
                     else:
-                        conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[0]), host, dest, message))
+                        conn.execute("INSERT INTO messages VALUES (?, ?, ?, ?)", (int(s_data_arr[1]), host, dest, message))
                         print "Messaged added to queue"
                         conn.commit()
                         self.send_all(4, mtime = int(s_data_arr[1]), host = host, dest = dest, message = message)
