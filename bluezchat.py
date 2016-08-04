@@ -275,6 +275,7 @@ class BluezChatGui:
                     self.add_text("\nWhat?.")
                 else:
                     self.send_all(6, host = self.hostname, dest = entry[1], key = self.publicKey.save_pkcs1())
+                self.input_tb.set_text("")
                 return True
             elif entry[0] == "/help":
                 self.add_text("COMMANDS: /help, /block <user>")
