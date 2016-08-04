@@ -541,9 +541,10 @@ class BluezChatGui:
                             self.add_text("\n[%s] %s: %s" % (self.get_time(mtime), host, message))
                             return True
                     elif dest in self.hosts.keys():
-                        if self.hosts[dest][0] != 0 and incoming_type != "wifi":
-                            sock = self.peers[self.hosts[dest][0]]
-                            sock.send(s_data + "\t")
+                        if self.hosts[dest][0] != 0:
+                            if incoming_type != "wifi":
+                                sock = self.peers[self.hosts[dest][0]]
+                                sock.send(s_data + "\t")
                         else:
                             sock = self.peers[self.hosts[dest][1]]
                             sock.send(s_data + "\t")
