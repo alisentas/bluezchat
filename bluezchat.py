@@ -503,7 +503,7 @@ class BluezChatGui:
                 rows = conn.execute("SELECT * FROM messages WHERE dest=\"" + name + "\"")
                 for row in rows:
                     rowc += 1
-                    sock.send("4", self.get_data(row[0], row[1], row[2], row[3]))
+                    sock.send("4," + self.get_data(row[0], row[1], row[2], row[3]))
                     print self.get_data(row[0], row[1], row[2], row[3])
                     print "Queued message [%s] sent." % row[3]
                 if rowc > 0:
