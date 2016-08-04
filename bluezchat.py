@@ -388,7 +388,7 @@ class BluezChatGui:
 
         if dest != "":
             if dest in self.hosts.keys():
-                if self.hosts[dest][0] != 0 and incoming_type != "wifi":
+                if self.hosts[dest][0] != 0:
                     sock = self.peers[self.hosts[dest][0]]
                     sock.send(data + "\t")
                 else:
