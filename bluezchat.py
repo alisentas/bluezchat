@@ -580,8 +580,8 @@ class BluezChatGui:
                     return True
                 host = s_data_arr[1]
                 dest = s_data_arr[2]
-                print "host: %s, dest: %s" % (host, dest)
                 if dest == self.hostname:
+                    print "Messages between you and %s are encrypted from now on." % host
                     remoteKey = rsa.PublicKey.load_pkcs1(s_data_arr[3])
                     key = str(random.randrange(1000000, 9999999))
                     keydata = base64.b64encode(rsa.encrypt(key, remoteKey))
@@ -610,6 +610,7 @@ class BluezChatGui:
                 dest = s_data_arr[2]
                 print "Host: %s, dest: %s" % (host, dest)
                 if dest == self.hostname:
+                    print "Messages between you and %s are encrypted from now on." % host
                     key = rsa.decrypt(base64.b64decode(s_data_arr[3]), self.privateKey)
                     self.keys[host] = key
                     return True
